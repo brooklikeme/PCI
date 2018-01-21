@@ -203,7 +203,7 @@ namespace pcitest
         {
             WriteBuffer[0] = (byte)'^';
             WriteBuffer[1] = 11;
-            WriteBuffer[2] = (byte)cbxClampStrength.SelectedIndex;
+            WriteBuffer[2] = (byte)(cbxClampStrength.SelectedIndex * 10);
             WriteBuffer[3] = (byte)'\n';
             SendData(WriteBuffer);
         }
@@ -212,7 +212,7 @@ namespace pcitest
         {
             WriteBuffer[0] = (byte)'^';
             WriteBuffer[1] = 12;
-            WriteBuffer[2] = (byte)cbxBlockStrength.SelectedIndex;
+            WriteBuffer[2] = (byte)(cbxBlockStrength.SelectedIndex * 10);
             WriteBuffer[3] = (byte)'\n';
             SendData(WriteBuffer);
         }

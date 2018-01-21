@@ -115,8 +115,9 @@
             // 
             this.tbrMasterPos.BackColor = System.Drawing.SystemColors.Control;
             this.tbrMasterPos.Location = new System.Drawing.Point(191, 162);
-            this.tbrMasterPos.Maximum = 10000;
+            this.tbrMasterPos.Maximum = 1000;
             this.tbrMasterPos.Name = "tbrMasterPos";
+            this.tbrMasterPos.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
             this.tbrMasterPos.Size = new System.Drawing.Size(950, 90);
             this.tbrMasterPos.TabIndex = 8;
             this.tbrMasterPos.Value = 10;
@@ -155,6 +156,7 @@
             this.tbrMasterAngle.Location = new System.Drawing.Point(1155, 162);
             this.tbrMasterAngle.Maximum = 360;
             this.tbrMasterAngle.Name = "tbrMasterAngle";
+            this.tbrMasterAngle.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
             this.tbrMasterAngle.Size = new System.Drawing.Size(436, 90);
             this.tbrMasterAngle.TabIndex = 15;
             this.tbrMasterAngle.Value = 10;
@@ -245,6 +247,7 @@
             this.tbrSlaveAngle.Location = new System.Drawing.Point(1155, 292);
             this.tbrSlaveAngle.Maximum = 3600;
             this.tbrSlaveAngle.Name = "tbrSlaveAngle";
+            this.tbrSlaveAngle.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
             this.tbrSlaveAngle.Size = new System.Drawing.Size(436, 90);
             this.tbrSlaveAngle.TabIndex = 22;
             this.tbrSlaveAngle.Value = 10;
@@ -265,6 +268,7 @@
             this.tbrSlavePos.Location = new System.Drawing.Point(191, 292);
             this.tbrSlavePos.Maximum = 1000;
             this.tbrSlavePos.Name = "tbrSlavePos";
+            this.tbrSlavePos.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
             this.tbrSlavePos.Size = new System.Drawing.Size(950, 90);
             this.tbrSlavePos.TabIndex = 20;
             this.tbrSlavePos.Value = 10;
@@ -408,10 +412,17 @@
             this.cbxClampStrength.FormattingEnabled = true;
             this.cbxClampStrength.ItemHeight = 25;
             this.cbxClampStrength.Items.AddRange(new object[] {
-            "<无>",
-            "低",
-            "中",
-            "高"});
+            "0",
+            "10",
+            "20",
+            "30",
+            "40",
+            "50",
+            "60",
+            "70",
+            "80",
+            "90",
+            "100"});
             this.cbxClampStrength.Location = new System.Drawing.Point(1052, 34);
             this.cbxClampStrength.Name = "cbxClampStrength";
             this.cbxClampStrength.Size = new System.Drawing.Size(85, 33);
@@ -432,10 +443,17 @@
             this.cbxBlockStrength.FormattingEnabled = true;
             this.cbxBlockStrength.ItemHeight = 25;
             this.cbxBlockStrength.Items.AddRange(new object[] {
-            "<无>",
-            "低",
-            "中",
-            "高"});
+            "0",
+            "10",
+            "20",
+            "30",
+            "40",
+            "50",
+            "60",
+            "70",
+            "80",
+            "90",
+            "100"});
             this.cbxBlockStrength.Location = new System.Drawing.Point(1325, 34);
             this.cbxBlockStrength.Name = "cbxBlockStrength";
             this.cbxBlockStrength.Size = new System.Drawing.Size(85, 33);

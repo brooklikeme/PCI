@@ -40,15 +40,14 @@ volatile int prev_time = 0;
 // volatile int master_spin_prev_time = 0;
 volatile int slave_move_pwm_value = 0;
 volatile int slave_spin_pwm_value = 0;
-volatile int master_status = 1; // 0: initialize, 1: tracking
-volatile int slave_status = 1;  // 0: initialize, 1: tracking
+volatile int master_status = 1; // 0: initializing, 1: tracking
+volatile int slave_status = 1;  // 0: initializing, 1: tracking
 volatile float master_module_position = 0;
 volatile float slave_module_position = 0;
 int master_kit_position = 0;
 int slave_kit_position = 0;
 uint8_t latest_interrupted_pin;
-const int forwardThreshold = 50;
-const int backwardThreshold = 50;
+const int trackThreshold = 40;
 
 // servo constants
 const int min_servo_pulse = 1200;
@@ -231,6 +230,7 @@ void initMaster() {
     if (master_remain_steps <= 0) {
       master_limit_triggered = false;
       master_status = 1;
+      master_tracing = 0;
       master_module_position = 0;
     }
   } else {
@@ -238,8 +238,10 @@ void initMaster() {
       // pull back
       master_limit_triggered = true;
       master_remain_steps = pullback_steps;
+      master_last_direction = 1;
       digitalWrite(MASTER_DIR_PIN, HIGH);
     } else {
+      master_last_direction = 0;
       master_remain_steps = minSteps;
       digitalWrite(MASTER_DIR_PIN, LOW);
     }
@@ -252,6 +254,7 @@ void initSlave() {
     if (slave_remain_steps <= 0) {
       slave_limit_triggered = false;
       slave_status = 1;
+      slave_tracing = 0;
       slave_module_position = 0;
     }
   } else {
@@ -267,66 +270,71 @@ void initSlave() {
   }  
 }
 
+void pullbackMaster() {
+  if (master_remain_steps <= 0) {
+    master_status = 0;
+    master_limit_triggered = false;
+  }
+}
+
+void pullbackSlave() {
+  if (slave_remain_steps <= 0) {
+    slave_status = 0;
+    slave_limit_triggered = false;
+  }
+}
+
 void trackMaster(int input) {
-  // check limit
+  // check limit and stop tracking
   bool forwardLimit = false;
   bool backwardLimit = false;
   if ((master_module_position < 0 ||  digitalRead(MASTER_LIMIT_PIN) == LOW) && !master_last_direction)  {
     backwardLimit = true;
+    master_tracing = 0;
+    master_remain_steps = 0;
   } else if ((master_module_position > track_length  || digitalRead(MASTER_LIMIT_PIN) == LOW) && master_last_direction) {
     forwardLimit = true;
+    master_remain_steps = 0;
   }
-  if (input < -78 && !forwardLimit) {
-    if (master_remain_steps > 0 || !master_tracing) {
-      if (master_last_direction == 0) {
+
+  //
+  if (input < -76 && !forwardLimit && master_tracing) {
+    // trace all along forward
+    if (master_last_direction == 0) {
           master_last_direction = 1; 
           digitalWrite(MASTER_DIR_PIN, HIGH);     
-      }
-      if (!master_tracing) {
-        master_remain_steps = 3200;  
-        master_tracing = 1;         
-      }   
-    } else {
-      master_remain_steps = 0;
     }
-  } else if (input > 78 && !backwardLimit){
-    if (master_remain_steps > 0 || !master_tracing) {
-      if (master_last_direction == 1) {
-          master_last_direction = 0;        
-          digitalWrite(MASTER_DIR_PIN, LOW);      
-      }
-      if (!master_tracing) {
-        master_remain_steps = 3200;  
-        master_tracing = 1;         
-      }   
-    } else {
-      master_remain_steps = 0;
+    if (master_remain_steps < 200) {
+        master_remain_steps = 1600;         
     }
-  } else {
-    master_remain_steps = 0;
-    if (master_last_direction == 0) {
-      if (input < 0 - backwardThreshold && !forwardLimit) {
+  } else if (input > 76 && !backwardLimit && master_tracing){
+    // tracing all along backward
+    if (master_last_direction == 1) {
+          master_last_direction = 0; 
+          digitalWrite(MASTER_DIR_PIN, LOW);     
+    }
+    if (master_remain_steps < 200) {
+        master_remain_steps = 1600;        
+    }
+  } else if (input >= -76 && input <= 76) {
+    master_tracing = 1;
+    // check 
+    if (input < 0 - trackThreshold && !forwardLimit) {
+      // track forward
+      if (master_last_direction == 0) {
         master_last_direction = 1;
         digitalWrite(MASTER_DIR_PIN, HIGH);
-        master_remain_steps = minSteps;
-      } else if (input > forwardThreshold && !backwardLimit) {
-        master_remain_steps = minSteps;
-      } else {
-        master_remain_steps = 0;
       }
-    } else {
-      if (input > backwardThreshold && !backwardLimit) {
+      master_remain_steps = minSteps;
+    } else if (input > trackThreshold && !backwardLimit) {
+      // track backward
+      if (master_last_direction == 1) {
         master_last_direction = 0;
-        digitalWrite(MASTER_DIR_PIN, LOW);        
-        master_remain_steps = minSteps;
-      } else if (input < 0 - forwardThreshold && !forwardLimit) {
-        master_remain_steps = minSteps;
-      } else {
-        master_remain_steps = 0;
-      }    
-    } 
-    master_tracing = 0;   
-  }    
+        digitalWrite(MASTER_DIR_PIN, LOW);
+      }
+      master_remain_steps = minSteps;        
+    }
+  }  
 }
 
 void trackSlave(int input) {
@@ -367,21 +375,21 @@ void trackSlave(int input) {
   } else {
     slave_remain_steps = 0;
     if (slave_last_direction == 0) {
-      if (input < 0 - backwardThreshold && !forwardLimit) {
+      if (input < 0 - trackThreshold && !forwardLimit) {
         slave_last_direction = 1;
         digitalWrite(SLAVE_DIR_PIN, HIGH);
         slave_remain_steps = minSteps;
-      } else if (input > forwardThreshold && !backwardLimit) {
+      } else if (input > trackThreshold && !backwardLimit) {
         slave_remain_steps = minSteps;
       } else {
         slave_remain_steps = 0;
       }
     } else {
-      if (input > backwardThreshold && !backwardLimit) {
+      if (input > trackThreshold && !backwardLimit) {
         slave_last_direction = 0;
         digitalWrite(SLAVE_DIR_PIN, LOW);        
         slave_remain_steps = minSteps;
-      } else if (input < 0 - forwardThreshold && !forwardLimit) {
+      } else if (input < 0 - trackThreshold && !forwardLimit) {
         slave_remain_steps = minSteps;
       } else {
         slave_remain_steps = 0;
@@ -409,8 +417,16 @@ byte readSwitchStatus() {
 void triggerEvent(char type, char param) {
   if (type == 1) {
     // init master tracker
-    master_status = 0;
     master_limit_triggered = digitalRead(MASTER_LIMIT_PIN) == LOW;
+    if (master_limit_triggered) {
+      // forward limit triggered, need to pull back
+      master_status = 3;
+      master_remain_steps = pullback_steps;      
+      master_last_direction = 0;
+      digitalWrite(MASTER_DIR_PIN, LOW);
+    } else {
+      master_status = 0;
+    }
     // loose module
     triggerEvent(11, 0);
     triggerEvent(12, 0);
@@ -452,10 +468,16 @@ void loop(){
     if (master_status == 0) {
       // init master module
       initMaster();
+    } else if (master_status == 3) {
+      pullbackMaster();
     }
+    
     if (slave_status == 0) {
       initSlave();
+    } else if (slave_status == 3) {
+      pullbackSlave();
     }
+    
     prevInitTime = currTime;
     
     // Serial.print("master move value: ");
@@ -491,7 +513,8 @@ void loop(){
     int master_position = 10 * (master_module_position - (master_move_value * 1.0 * master_vision_width / 160));
     // Serial.println(master_position);
     master_position = master_position >= 0 ? (int)master_position : 0;
-    int slave_position = 10 * (slave_module_position - (slave_move_value * 1.0 * slave_vision_width / 160));
+    // int slave_position = 10 * (slave_module_position - (slave_move_value * 1.0 * slave_vision_width / 160));
+    int slave_position =  master_move_value + 80;
     // Serial.println(master_position);
     slave_position = slave_position >= 0 ? (int)slave_position : 0;    
     currSendBuffer[0] = '^';

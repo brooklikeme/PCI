@@ -53,7 +53,7 @@ namespace pcitest
                 //
                 double masterPos = BitConverter.ToInt16(new byte[] {ReadBuffer[1], ReadBuffer[2]}, 0) * 1.0 / 10;
                 int masterAngle = BitConverter.ToInt16(new byte[] {ReadBuffer[3], ReadBuffer[4]}, 0);
-                double slavePos = BitConverter.ToInt16(new byte[] {ReadBuffer[5], ReadBuffer[6]}, 0) * 1.0 / 10;
+                double slavePos = BitConverter.ToInt16(new byte[] {ReadBuffer[5], ReadBuffer[6]}, 0);
                 int slaveAngle = BitConverter.ToInt16(new byte[] {ReadBuffer[7], ReadBuffer[8]}, 0);
                 int contrast = BitConverter.ToInt16(new byte[] {ReadBuffer[9], ReadBuffer[10]}, 0);
                 int pressure = BitConverter.ToInt16(new byte[] {ReadBuffer[11], ReadBuffer[12]}, 0);

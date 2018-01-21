@@ -1,4 +1,4 @@
-#include <PinChangeInt.h>
+#include <EnableInterrupt.h>
 #include <ServoTimer2.h>  // the servo library
 
 #define BLOCK_PIN 11
@@ -23,6 +23,15 @@
 #define MASTER_LIMIT_PIN 2 // master limit switch pin
 #define SLAVE_LIMIT_PIN 3 // slave limit switch pin
 
+#define PWM_PINS  4
+
+#define PWM_CH1  0
+#define PWM_CH2  1
+#define PWM_CH3  2
+#define PWM_CH4  3
+
+volatile int prev_times[PWM_PINS];
+volatile int pwm_values[PWM_PINS];
 
 const int stepperSpeed = 800;
 const int stepsPerRev = 3200;
@@ -113,6 +122,20 @@ ISR(TIMER1_COMPA_vect){ //timer1 interrupt 1Hz toggles pin 13 (LED)
   } */ 
 }
 
+void calc_pwm(int channel, int pwm_pin) {
+  if (digitalRead(pwm_pin) == HIGH) {
+    prev_times[channel] = micros();
+  } else {
+    pwm_values[channel] = micros() - prev_times[channel];
+  }
+}
+
+void calc_pwm_value1() { calc_pwm(PWM_CH1, MASTER_MOVE_PIN); }
+void calc_pwm_value2() { calc_pwm(PWM_CH2, MASTER_SPIN_PIN); }
+void calc_pwm_value3() { calc_pwm(PWM_CH3, SLAVE_MOVE_PIN); }
+void calc_pwm_value4() { calc_pwm(PWM_CH4, SLAVE_SPIN_PIN); }
+
+/*
 void rising() {
   latest_interrupted_pin = PCintPort::arduinoPin;
   PCintPort::attachInterrupt(latest_interrupted_pin, &falling, FALLING);
@@ -131,29 +154,6 @@ void falling() {
   } else if (latest_interrupted_pin == SLAVE_SPIN_PIN) {
     slave_spin_pwm_value = micros() - prev_time + 40;
   }
-}
-
-/*
-void master_move_change() {
-  if(digitalRead(MASTER_MOVE_PIN) == HIGH)
-  { 
-    master_move_prev_time = micros();
-  }
-  else
-  {
-    master_move_pwm_value = micros() - master_move_prev_time;
-  }  
-}
-
-void master_spin_change() {
-  if(digitalRead(MASTER_SPIN_PIN) == HIGH)
-  { 
-    master_spin_prev_time = micros();
-  }
-  else
-  {
-    master_spin_pwm_value = micros() - master_spin_prev_time;
-  }    
 }*/
 
 void setup(){//将步进电机用到的IO管脚设置成输出
@@ -180,21 +180,23 @@ void setup(){//将步进电机用到的IO管脚设置成输出
 
   pinMode(MASTER_MOVE_PIN, INPUT); 
   digitalWrite(MASTER_MOVE_PIN, HIGH);
-  PCintPort::attachInterrupt(MASTER_MOVE_PIN, &rising, RISING);
+  // PCintPort::attachInterrupt(MASTER_MOVE_PIN, &rising, RISING);
+  enableInterrupt(MASTER_MOVE_PIN, calc_pwm_value1, CHANGE);
 
   pinMode(MASTER_SPIN_PIN, INPUT);
   digitalWrite(MASTER_SPIN_PIN, HIGH);
-  PCintPort::attachInterrupt(MASTER_SPIN_PIN, &rising, RISING);
+  // PCintPort::attachInterrupt(MASTER_SPIN_PIN, &rising, RISING);
+  enableInterrupt(MASTER_SPIN_PIN, calc_pwm_value2, CHANGE);
 
-  /*
   pinMode(SLAVE_MOVE_PIN, INPUT);
   digitalWrite(SLAVE_MOVE_PIN, HIGH);
-  PCintPort::attachInterrupt(SLAVE_MOVE_PIN, &rising, RISING);
+  // PCintPort::attachInterrupt(SLAVE_MOVE_PIN, &rising, RISING);
+  enableInterrupt(SLAVE_MOVE_PIN, calc_pwm_value3, CHANGE);
 
   pinMode(SLAVE_SPIN_PIN, INPUT);
   digitalWrite(SLAVE_SPIN_PIN, HIGH);
-  PCintPort::attachInterrupt(SLAVE_SPIN_PIN, &rising, RISING);
-*/
+  // PCintPort::attachInterrupt(SLAVE_SPIN_PIN, &rising, RISING);
+  enableInterrupt(SLAVE_SPIN_PIN, calc_pwm_value4, CHANGE);
 
   cli();//stop interrupts
   
@@ -450,15 +452,19 @@ void loop(){
   // track visions
   if (master_status == 1) {
     // get vision position
-    master_move_value = map(master_move_pwm_value * 1.0 / 100.0, 1, 99, 0, 160) - 80;
-    master_spin_value = map(master_spin_pwm_value * 1.0 / 100.0, 1, 99, 0, 360);
+    // master_move_value = map(master_move_pwm_value * 1.0 / 100.0, 1, 99, 0, 160) - 80;
+    // master_spin_value = map(master_spin_pwm_value * 1.0 / 100.0, 1, 99, 0, 360);
+    master_move_value = map(pwm_values[0] * 1.0 / 100.0, 1, 99, 0, 160) - 80;
+    master_spin_value = map(pwm_values[1] * 1.0 / 100.0, 1, 99, 0, 360);
     // track master module
     trackMaster(master_move_value);    
   }
   if (slave_status == 1) {
     // get vision position
-    slave_move_value = map(slave_move_pwm_value * 1.0 / 100.0, 1, 99, 0, 160) - 80;
-    slave_spin_value = map(slave_spin_pwm_value * 1.0 / 100.0, 1, 99, 0, 360);
+    // slave_move_value = map(slave_move_pwm_value * 1.0 / 100.0, 1, 99, 0, 160) - 80;
+    // slave_spin_value = map(slave_spin_pwm_value * 1.0 / 100.0, 1, 99, 0, 360);
+    slave_move_value = map(pwm_values[2] * 1.0 / 100.0, 1, 99, 0, 160) - 80;
+    slave_spin_value = map(pwm_values[3] * 1.0 / 100.0, 1, 99, 0, 360) ;   
     // track slave module
     trackSlave(slave_move_value);    
   }
@@ -479,15 +485,16 @@ void loop(){
     }
     
     prevInitTime = currTime;
-    
-    // Serial.print("master move value: ");
-    // Serial.print(master_move_value);
-    // Serial.print(", master spin value: ");
-    // Serial.println(master_spin_value);    
-    // Serial.print(", slave move value: ");
-    // Serial.print(slave_move_value);
-    // Serial.print(", slave spin value: ");
-    // Serial.println(slave_spin_value);   
+
+    /*
+    Serial.print("master move value: ");
+    Serial.print(master_move_value);
+    Serial.print(", master spin value: ");
+    Serial.print(master_spin_value);    
+    Serial.print(", slave move value: ");
+    Serial.print(slave_move_value);
+    Serial.print(", slave spin value: ");
+    Serial.println(slave_spin_value);  */ 
     
   }
   

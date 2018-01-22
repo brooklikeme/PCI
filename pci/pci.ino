@@ -73,7 +73,10 @@ ServoTimer2 blockServo;
 volatile int master_last_direction = 1;
 volatile int slave_last_direction = 0;
 int master_tracing = 0;
+int master_tracing_times = 0;
 int slave_tracing = 0;
+int slave_tracing_times = 0;
+const int tracing_ok_times = 1000;
 int currTime = 0;
 int prevReadTime = 0;
 int prevInitTime = 0;
@@ -107,7 +110,6 @@ ISR(TIMER1_COMPA_vect){ //timer1 interrupt 1Hz toggles pin 13 (LED)
     master_toggle = !master_toggle;   
   }
 
-  /*
   if (slave_remain_steps > 0) {
     if (slave_toggle){
       digitalWrite(SLAVE_STP_PIN, HIGH);
@@ -116,10 +118,10 @@ ISR(TIMER1_COMPA_vect){ //timer1 interrupt 1Hz toggles pin 13 (LED)
       digitalWrite(SLAVE_STP_PIN, LOW);
       slave_remain_steps --;       
       // update slave module position
-      slave_module_position += slave_last_direction ? distancePerStep : 0 - distancePerStep;
+      slave_module_position += slave_last_direction ? 0 - distancePerStep : distancePerStep;
     }
     slave_toggle = !slave_toggle;   
-  } */ 
+  }
 }
 
 void calc_pwm(int channel, int pwm_pin) {
@@ -233,6 +235,7 @@ void initMaster() {
       master_limit_triggered = false;
       master_status = 1;
       master_tracing = 0;
+      master_tracing_times = 0;
       master_module_position = 0;
     }
   } else {
@@ -257,6 +260,7 @@ void initSlave() {
       slave_limit_triggered = false;
       slave_status = 1;
       slave_tracing = 0;
+      slave_tracing_times = 0;
       slave_module_position = 0;
     }
   } else {
@@ -264,8 +268,10 @@ void initSlave() {
       // pull back
       slave_limit_triggered = true;
       slave_remain_steps = pullback_steps;
+      slave_last_direction = 0;
       digitalWrite(SLAVE_DIR_PIN, LOW);
     } else {
+      slave_last_direction = 1;
       slave_remain_steps = minSteps;
       digitalWrite(SLAVE_DIR_PIN, HIGH);
     }
@@ -293,6 +299,7 @@ void trackMaster(int input) {
   if ((master_module_position < 0 ||  digitalRead(MASTER_LIMIT_PIN) == LOW) && !master_last_direction)  {
     backwardLimit = true;
     master_tracing = 0;
+    slave_tracing_times = 0;
     master_remain_steps = 0;
   } else if ((master_module_position > track_length  || digitalRead(MASTER_LIMIT_PIN) == LOW) && master_last_direction) {
     forwardLimit = true;
@@ -319,7 +326,12 @@ void trackMaster(int input) {
         master_remain_steps = 1600;        
     }
   } else if (input >= -76 && input <= 76) {
-    master_tracing = 1;
+    if (!master_tracing) {
+      master_tracing_times ++;      
+      if (master_tracing_times >= tracing_ok_times) {
+        master_tracing = 1;
+      }
+    }
     // check 
     if (input < 0 - trackThreshold && !forwardLimit) {
       // track forward
@@ -340,65 +352,62 @@ void trackMaster(int input) {
 }
 
 void trackSlave(int input) {
-  // check limit
+  // check limit and stop tracking
   bool forwardLimit = false;
   bool backwardLimit = false;
-  if ((slave_module_position < 0 ||  digitalRead(SLAVE_LIMIT_PIN) == LOW) && !slave_last_direction) {
+  if ((slave_module_position < 0 ||  digitalRead(SLAVE_LIMIT_PIN) == LOW) && slave_last_direction)  {
     backwardLimit = true;
-  } else if ((slave_module_position > track_length  || digitalRead(SLAVE_LIMIT_PIN) == LOW) && slave_last_direction) {
+    slave_tracing = 0;
+    slave_tracing_times = 0;
+    slave_remain_steps = 0;
+  } else if ((slave_module_position > track_length  || digitalRead(SLAVE_LIMIT_PIN) == LOW) && !slave_last_direction) {
     forwardLimit = true;
+    slave_remain_steps = 0;
   }
-  if (input < -78 && !forwardLimit) {
-    if (slave_remain_steps > 0 || !slave_tracing) {
-      if (slave_last_direction == 0) {
+
+  //
+  if (input < -76 && !backwardLimit && slave_tracing) {
+    // trace all along backward
+    if (slave_last_direction == 0) {
           slave_last_direction = 1; 
           digitalWrite(SLAVE_DIR_PIN, HIGH);     
-      }
-      if (!slave_tracing) {
-        slave_remain_steps = 1600;  
-        slave_tracing = 1;         
-      }   
-    } else {
-      slave_remain_steps = 0;
     }
-  } else if (input > 78 && !backwardLimit){
-    if (slave_remain_steps > 0 || !slave_tracing) {
-      if (slave_last_direction == 1) {
-          slave_last_direction = 0;        
-          digitalWrite(SLAVE_DIR_PIN, LOW);      
-      }
-      if (!slave_tracing) {
-        slave_remain_steps = 1600;  
-        slave_tracing = 1;         
-      }   
-    } else {
-      slave_remain_steps = 0;
+    if (slave_remain_steps < 200) {
+        slave_remain_steps = 1600;         
     }
-  } else {
-    slave_remain_steps = 0;
-    if (slave_last_direction == 0) {
-      if (input < 0 - trackThreshold && !forwardLimit) {
+  } else if (input > 76 && !forwardLimit && slave_tracing){
+    // tracing all along forward
+    if (slave_last_direction == 1) {
+          slave_last_direction = 0; 
+          digitalWrite(SLAVE_DIR_PIN, LOW);     
+    }
+    if (slave_remain_steps < 200) {
+        slave_remain_steps = 1600;        
+    }
+  } else if (input >= -76 && input <= 76) {
+    if (!slave_tracing) {
+      slave_tracing_times ++;      
+      if (slave_tracing_times >= tracing_ok_times) {
+        slave_tracing = 1;
+      }
+    }
+    // check 
+    if (input < 0 - trackThreshold && !backwardLimit) {
+      // track backward
+      if (slave_last_direction == 0) {
         slave_last_direction = 1;
         digitalWrite(SLAVE_DIR_PIN, HIGH);
-        slave_remain_steps = minSteps;
-      } else if (input > trackThreshold && !backwardLimit) {
-        slave_remain_steps = minSteps;
-      } else {
-        slave_remain_steps = 0;
       }
-    } else {
-      if (input > trackThreshold && !backwardLimit) {
+      slave_remain_steps = minSteps;
+    } else if (input > trackThreshold && !forwardLimit) {
+      // track forward
+      if (slave_last_direction == 1) {
         slave_last_direction = 0;
-        digitalWrite(SLAVE_DIR_PIN, LOW);        
-        slave_remain_steps = minSteps;
-      } else if (input < 0 - trackThreshold && !forwardLimit) {
-        slave_remain_steps = minSteps;
-      } else {
-        slave_remain_steps = 0;
-      }    
-    } 
-    slave_tracing = 0;   
-  }      
+        digitalWrite(SLAVE_DIR_PIN, LOW);
+      }
+      slave_remain_steps = minSteps;        
+    }
+  }     
 }
 
 int readPressure() {
@@ -433,9 +442,17 @@ void triggerEvent(char type, char param) {
     triggerEvent(11, 0);
     triggerEvent(12, 0);
   } else if (type == 2) {
-    slave_status = 0;
-    slave_limit_triggered = digitalRead(SLAVE_LIMIT_PIN) == LOW;
     // init slave tracker
+    slave_limit_triggered = digitalRead(SLAVE_LIMIT_PIN) == LOW;
+    if (slave_limit_triggered) {
+      // forward limit triggered, need to pull back
+      slave_status = 3;
+      slave_remain_steps = pullback_steps;      
+      slave_last_direction = 1;
+      digitalWrite(SLAVE_DIR_PIN, HIGH);
+    } else {
+      slave_status = 0;
+    }
   } else if (type == 11) {
     // trigger clamp
     clampServo.write(map(param, 0, 100, 3100 - min_servo_pulse, 3100 - max_servo_pulse));
@@ -486,15 +503,21 @@ void loop(){
     
     prevInitTime = currTime;
 
-    /*
-    Serial.print("master move value: ");
+
+   /*
+    Serial.print("master tracing: ");
+    Serial.print(master_tracing);
+    Serial.print(", slave tracing: ");
+    Serial.print(slave_tracing);    
+    Serial.print(", master move value: ");
     Serial.print(master_move_value);
     Serial.print(", master spin value: ");
     Serial.print(master_spin_value);    
     Serial.print(", slave move value: ");
     Serial.print(slave_move_value);
     Serial.print(", slave spin value: ");
-    Serial.println(slave_spin_value);  */ 
+    Serial.println(slave_spin_value);  */
+    
     
   }
   
@@ -520,8 +543,8 @@ void loop(){
     int master_position = 10 * (master_module_position - (master_move_value * 1.0 * master_vision_width / 160));
     // Serial.println(master_position);
     master_position = master_position >= 0 ? (int)master_position : 0;
-    // int slave_position = 10 * (slave_module_position - (slave_move_value * 1.0 * slave_vision_width / 160));
-    int slave_position =  master_move_value + 80;
+    int slave_position = 10 * (slave_module_position - (slave_move_value * 1.0 * slave_vision_width / 160));
+    // int slave_position =  master_move_value + 80;
     // Serial.println(master_position);
     slave_position = slave_position >= 0 ? (int)slave_position : 0;    
     currSendBuffer[0] = '^';

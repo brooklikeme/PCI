@@ -33,13 +33,13 @@
 volatile int prev_times[PWM_PINS];
 volatile int pwm_values[PWM_PINS];
 
-const int stepperSpeed = 800;
+const int stepperSpeed = 400;
 const int stepsPerRev = 3200;
-const int distancePerRev = 40;
+const int distancePerRev = 80;
 const float distancePerStep = float(distancePerRev) / float(stepsPerRev);
 const int master_vision_width = 60;
 const int slave_vision_width = 60;
-int minSteps = 40;// stepsPerRev / (distancePerRev * 2);
+int minSteps = 80;// stepsPerRev / (distancePerRev * 2);
 volatile int master_remain_steps = 0;
 volatile int slave_remain_steps = 0;
 volatile int master_move_pwm_value = 0;
@@ -51,7 +51,7 @@ volatile int master_status = 1; // 0: initializing, 1: tracking
 volatile int slave_status = 1;  // 0: initializing, 1: tracking
 volatile float master_module_position = 0;
 volatile float slave_module_position = 0;
-const int trackThreshold = 40;
+const int trackThreshold = 80;
 
 // servo constants
 const int min_servo_pulse = 1200;
@@ -60,7 +60,7 @@ const int max_servo_pulse = 1750;
 volatile boolean master_toggle = 1;
 volatile boolean slave_toggle = 1;
 const int track_length = 750; 
-const int pullback_steps = 1600;
+const int pullback_steps = 800;
 
 ServoTimer2 clampServo;
 ServoTimer2 blockServo; 
@@ -71,7 +71,7 @@ int master_tracing = 0;
 int master_tracing_times = 0;
 int slave_tracing = 0;
 int slave_tracing_times = 0;
-const int tracing_ok_times = 300;
+const int tracing_ok_times = 100;
 int currTime = 0;
 int prevReadTime = 0;
 int prevInitTime = 0;
@@ -204,7 +204,7 @@ void setup(){//将步进电机用到的IO管脚设置成输出
   TCCR1B = 0;// same for TCCR1B
   TCNT1  = 0;//initialize counter value to 0
   // set compare match register for 1hz increments
-  OCR1A = 16000000.0f / 26000;
+  OCR1A = 16000000.0f / 20000;
   // turn on CTC mode
   TCCR1B |= (1 << WGM12);
   // Set CS12 and CS10 bits for 1024 prescaler
@@ -313,8 +313,8 @@ void trackMaster(int input) {
           master_last_direction = 1; 
           digitalWrite(MASTER_DIR_PIN, HIGH);     
     }
-    if (master_remain_steps < 200) {
-        master_remain_steps = 1600;         
+    if (master_remain_steps < 100) {
+        master_remain_steps = 800;         
     }
   } else if (input > 150 && !backwardLimit && master_tracing){
     // tracing all along backward
@@ -322,8 +322,8 @@ void trackMaster(int input) {
           master_last_direction = 0; 
           digitalWrite(MASTER_DIR_PIN, LOW);     
     }
-    if (master_remain_steps < 200) {
-        master_remain_steps = 1600;        
+    if (master_remain_steps < 100) {
+        master_remain_steps = 800;        
     }
   } else if (input >= -150 && input <= 150) {
     if (!master_tracing) {
@@ -373,8 +373,8 @@ void trackSlave(int input) {
         slave_last_direction = 1; 
         digitalWrite(SLAVE_DIR_PIN, HIGH);     
     }
-    if (slave_remain_steps < 200) {
-        slave_remain_steps = 1600;         
+    if (slave_remain_steps < 100) {
+        slave_remain_steps = 800;         
     }
   } else if (input > 150 && !forwardLimit && slave_tracing){
     // tracing all along forward
@@ -382,8 +382,8 @@ void trackSlave(int input) {
         slave_last_direction = 0; 
         digitalWrite(SLAVE_DIR_PIN, LOW);     
     }
-    if (slave_remain_steps < 200) {
-        slave_remain_steps = 1600;        
+    if (slave_remain_steps < 100) {
+        slave_remain_steps = 800;        
     }
   } else if (input >= -150 && input <= 150) {
     if (!slave_tracing) {
@@ -464,6 +464,11 @@ void triggerEvent(char type, char param) {
   }
 }
 
+int test_master_position = 0;
+float test_master_rotation = 0;
+int test_slave_position = 0;
+float test_slave_rotation = 0;
+
 void loop(){
   // read sensors at a constant speed
   currTime = micros();
@@ -539,6 +544,28 @@ void loop(){
      * 脚踏开关状态  1
      * 结束符   1
      */
+
+     /*
+    test_master_position += 5;
+    if (test_master_position >= 7500) {
+      test_master_position = 0;
+    }
+
+    test_master_rotation += 1;
+    if (test_master_rotation > 360) {
+      test_master_rotation = 0;
+    }
+
+    test_slave_position += 5;
+    if (test_slave_position >= 7500) {
+      test_slave_position = 0;
+    }
+
+    test_slave_rotation += 1;
+    if (test_slave_rotation > 360) {
+      test_slave_rotation = 0;
+    }*/
+    
     int master_position = 10 * (master_module_position - (master_move_value * 1.0 * master_vision_width / 320));
     // Serial.println(master_position);
     master_position = master_position >= 0 ? (int)master_position : 0;

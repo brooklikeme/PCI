@@ -51,10 +51,10 @@ volatile int master_status = 1; // 0: initializing, 1: tracking
 volatile int slave_status = 1;  // 0: initializing, 1: tracking
 volatile float master_module_position = 0;
 volatile float slave_module_position = 0;
-const int trackThreshold = 80;
+const int trackThreshold = 100;
 
 // servo constants
-const int min_servo_pulse = 1200;
+const int min_servo_pulse = 1120;
 const int max_servo_pulse = 1750; 
 
 volatile boolean master_toggle = 1;
@@ -72,6 +72,13 @@ int master_tracing_times = 0;
 int slave_tracing = 0;
 int slave_tracing_times = 0;
 const int tracing_ok_times = 100;
+
+int master_seeking = 0;
+int master_seeking_times = 0;
+int slave_seeking = 0;
+int slave_seeking_times = 0;
+const int seeking_prep_times = 20;
+
 int currTime = 0;
 int prevReadTime = 0;
 int prevInitTime = 0;
@@ -299,15 +306,25 @@ void trackMaster(int input) {
   if ((master_module_position < 0 ||  digitalRead(MASTER_LIMIT_PIN) == LOW) && !master_last_direction)  {
     backwardLimit = true;
     master_tracing = 0;
+    master_seeking = 0;
     master_tracing_times = 0;
     master_remain_steps = 0;
   } else if ((master_module_position > track_length  || digitalRead(MASTER_LIMIT_PIN) == LOW) && master_last_direction) {
     forwardLimit = true;
+    master_seeking = 0;
     master_remain_steps = 0;
   }
 
   //
   if (input < -156 && !forwardLimit && master_tracing) {
+    if (!master_seeking) {
+      master_seeking_times ++;
+      if (master_seeking_times >= seeking_prep_times) {
+        master_seeking = 1;
+        master_seeking_times = 0;
+      } 
+      return;
+    }
     // trace all along forward
     if (master_last_direction == 0) {
           master_last_direction = 1; 
@@ -317,6 +334,14 @@ void trackMaster(int input) {
         master_remain_steps = 800;         
     }
   } else if (input > 150 && !backwardLimit && master_tracing){
+    if (!master_seeking) {
+      master_seeking_times ++;
+      if (master_seeking_times >= seeking_prep_times) {
+        master_seeking = 1;
+        master_seeking_times = 0;
+      } 
+      return;
+    }
     // tracing all along backward
     if (master_last_direction == 1) {
           master_last_direction = 0; 
@@ -326,6 +351,8 @@ void trackMaster(int input) {
         master_remain_steps = 800;        
     }
   } else if (input >= -150 && input <= 150) {
+    master_seeking = 0;
+    master_seeking_times = 0;
     if (!master_tracing) {
       master_tracing_times ++;      
       if (master_tracing_times >= tracing_ok_times) {
@@ -358,16 +385,27 @@ void trackSlave(int input) {
   bool backwardLimit = false;
   if ((slave_module_position < 0 ||  digitalRead(SLAVE_LIMIT_PIN) == LOW) && slave_last_direction)  {
     backwardLimit = true;
+    slave_seeking = 0;
     slave_tracing = 0;
     slave_tracing_times = 0;
     slave_remain_steps = 0;
   } else if ((slave_module_position > track_length  || digitalRead(SLAVE_LIMIT_PIN) == LOW) && !slave_last_direction) {
     forwardLimit = true;
+    slave_seeking = 0;
     slave_remain_steps = 0;
   }
 
   //
   if (input < -150 && !backwardLimit && slave_tracing) {
+    if (!slave_seeking) {
+      slave_seeking_times ++;
+      if (slave_seeking_times >= seeking_prep_times) {
+        slave_seeking = 1;
+        slave_seeking_times = 0;
+      } 
+      return;
+    }
+
     // trace all along backward
     if (slave_last_direction == 0) {
         slave_last_direction = 1; 
@@ -377,6 +415,14 @@ void trackSlave(int input) {
         slave_remain_steps = 800;         
     }
   } else if (input > 150 && !forwardLimit && slave_tracing){
+    if (!slave_seeking) {
+      slave_seeking_times ++;
+      if (slave_seeking_times >= seeking_prep_times) {
+        slave_seeking = 1;
+        slave_seeking_times = 0;
+      } 
+      return;
+    }
     // tracing all along forward
     if (slave_last_direction == 1) {
         slave_last_direction = 0; 
@@ -386,6 +432,8 @@ void trackSlave(int input) {
         slave_remain_steps = 800;        
     }
   } else if (input >= -150 && input <= 150) {
+    slave_seeking = 0;
+    slave_seeking_times = 0;
     if (!slave_tracing) {
       slave_tracing_times ++;      
       if (slave_tracing_times >= tracing_ok_times) {

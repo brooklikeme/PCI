@@ -1,40 +1,58 @@
 #include <EnableInterrupt.h>
 #include <ServoTimer2.h>  // the servo library
 
-#define BLOCK_PIN 11
-#define CLAMP_PIN 10
-#define MASTER_DIR_PIN     9       // master module direction
-#define MASTER_STP_PIN     8       // master module step signal
-#define SLAVE_DIR_PIN      7       // slave module direction
-#define SLAVE_STP_PIN      6       // slave module step signal
+#define FORCE_PIN1 11
+#define FORCE_PIN2 10
+#define FORCE_PIN3 111
+
+
+#define MASTER_STP_PIN       54
+#define MASTER_DIR_PIN       55
+#define MASTER_ENA_PIN       38
+
+#define SLAVE_STP_PIN        60
+#define SLAVE_DIR_PIN        61
+#define SLAVE_ENA_PIN        56
+
 #define CONTRAST_PIN A1
 #define PRESSURE_PIN A2
 #define SWITCH_PIN A3
 
-#define MASTER_SETTING_PIN A4 // set tracking color for master module
-#define SLAVE_SETTING_PIN A5 // set tracking color for slave module
+// #define MASTER_SETTING_PIN A4 // set tracking color for master module
+// #define SLAVE_SETTING_PIN A5 // set tracking color for slave module
 
-#define MASTER_MOVE_PIN 5 // get master move pwm pulse
-#define MASTER_SPIN_PIN 4 // get master spin pwm pulse
-#define SLAVE_MOVE_PIN 13 // get slave move pwm pulse
-#define SLAVE_SPIN_PIN 12 // get slave spin pwm pulse
+#define MASTER_MOVE_PIN1 1 // get master move pwm pulse
+#define MASTER_MOVE_PIN2 0 //
+#define MASTER_SPIN_PIN 57 // get master spin pwm pulse
+#define MASTER_SETTING_PIN1 58// 
+#define MASTER_SETTING_PIN2 63// 
+
+#define SLAVE_MOVE_PIN1 40 // get slave move pwm pulse
+#define SLAVE_MOVE_PIN2 42
+#define SLAVE_SPIN_PIN 65 // get slave spin pwm pulse
+#define SLAVE_SETTING_PIN1 59 //
+#define SLAVE_SETTING_PIN2 64 // 
 
 
-#define MASTER_LIMIT_PIN 2 // master limit switch pin
-#define SLAVE_LIMIT_PIN 3 // slave limit switch pin
+#define MASTER_LIMIT_PIN 3 // master limit switch pin
+#define SLAVE_LIMIT_PIN 2 // slave limit switch pin
+#define FORCE_LIMIT_PIN2 14
+#define FORCE_LIMIT_PIN3 15
 
-#define PWM_PINS  4
+#define PWM_PINS  6
 
 #define PWM_CH1  0
 #define PWM_CH2  1
 #define PWM_CH3  2
 #define PWM_CH4  3
+#define PWM_CH4  4
+#define PWM_CH4  5
 
 volatile int prev_times[PWM_PINS];
 volatile int pwm_values[PWM_PINS];
 
 const int stepperSpeed = 400;
-const int stepsPerRev = 3200;
+const int stepsPerRev = 1600;
 const int distancePerRev = 80;
 const float distancePerStep = float(distancePerRev) / float(stepsPerRev);
 const int master_vision_width = 60;
@@ -62,8 +80,9 @@ volatile boolean slave_toggle = 1;
 const int track_length = 750; 
 const int pullback_steps = 800;
 
-ServoTimer2 clampServo;
-ServoTimer2 blockServo; 
+ServoTimer2 forceServo1;
+ServoTimer2 forceServo2; 
+ServoTimer2 forceServo3;
 
 volatile int master_last_direction = 1;
 volatile int slave_last_direction = 1;
@@ -87,7 +106,7 @@ int initInterval = 3000;
 int pressure = 0;
 int contrast = 0;
 byte switchStatus = 0;
-byte readBuffer[4];
+byte readBuffer[6];
 int readBufferIndex = 0;
 byte prevSendBuffer[15];
 byte currSendBuffer[15];
@@ -137,9 +156,9 @@ void calc_pwm(int channel, int pwm_pin) {
   }
 }
 
-void calc_pwm_value1() { calc_pwm(PWM_CH1, MASTER_MOVE_PIN); }
+void calc_pwm_value1() { calc_pwm(PWM_CH1, MASTER_MOVE_PIN1); }
 void calc_pwm_value2() { calc_pwm(PWM_CH2, MASTER_SPIN_PIN); }
-void calc_pwm_value3() { calc_pwm(PWM_CH3, SLAVE_MOVE_PIN); }
+void calc_pwm_value3() { calc_pwm(PWM_CH3, SLAVE_MOVE_PIN1); }
 void calc_pwm_value4() { calc_pwm(PWM_CH4, SLAVE_SPIN_PIN); }
 
 /*
@@ -171,34 +190,44 @@ void setup(){//将步进电机用到的IO管脚设置成输出
 
   pinMode(MASTER_LIMIT_PIN, INPUT_PULLUP);
   pinMode(SLAVE_LIMIT_PIN, INPUT_PULLUP);
+  pinMode(FORCE_LIMIT_PIN2, INPUT_PULLUP);
+  pinMode(FORCE_LIMIT_PIN3, INPUT_PULLUP);
   
   pinMode(MASTER_DIR_PIN, OUTPUT);
   digitalWrite(MASTER_DIR_PIN, HIGH);
   pinMode(MASTER_STP_PIN, OUTPUT);
+  pinMode(MASTER_ENA_PIN, OUTPUT);
+  digitalWrite(MASTER_ENA_PIN, LOW);
+
   pinMode(SLAVE_DIR_PIN, OUTPUT);
   digitalWrite(MASTER_DIR_PIN, HIGH);
   pinMode(SLAVE_STP_PIN, OUTPUT);
+  pinMode(SLAVE_ENA_PIN, OUTPUT);
+  digitalWrite(SLAVE_ENA_PIN, LOW);  
 
-  pinMode(BLOCK_PIN, OUTPUT);
-  pinMode(CLAMP_PIN, OUTPUT);
+  pinMode(FORCE_PIN1, OUTPUT);
+  pinMode(FORCE_PIN2, OUTPUT);
+  pinMode(FORCE_PIN3, OUTPUT);
 
-  pinMode(MASTER_SETTING_PIN, OUTPUT);
-  pinMode(SLAVE_SETTING_PIN, OUTPUT);
+  pinMode(MASTER_SETTING_PIN1, OUTPUT);  
+  pinMode(MASTER_SETTING_PIN2, OUTPUT);
+  pinMode(SLAVE_SETTING_PIN1, OUTPUT);
+  pinMode(SLAVE_SETTING_PIN2, OUTPUT);
 
-  pinMode(MASTER_MOVE_PIN, INPUT); 
-  digitalWrite(MASTER_MOVE_PIN, HIGH);
-  // PCintPort::attachInterrupt(MASTER_MOVE_PIN, &rising, RISING);
-  enableInterrupt(MASTER_MOVE_PIN, calc_pwm_value1, CHANGE);
+  pinMode(MASTER_MOVE_PIN1, INPUT); 
+  digitalWrite(MASTER_MOVE_PIN1, HIGH);
+  // PCintPort::attachInterrupt(MASTER_MOVE_PIN1, &rising, RISING);
+  enableInterrupt(MASTER_MOVE_PIN1, calc_pwm_value1, CHANGE);
 
   pinMode(MASTER_SPIN_PIN, INPUT);
   digitalWrite(MASTER_SPIN_PIN, HIGH);
   // PCintPort::attachInterrupt(MASTER_SPIN_PIN, &rising, RISING);
   enableInterrupt(MASTER_SPIN_PIN, calc_pwm_value2, CHANGE);
 
-  pinMode(SLAVE_MOVE_PIN, INPUT);
-  digitalWrite(SLAVE_MOVE_PIN, HIGH);
-  // PCintPort::attachInterrupt(SLAVE_MOVE_PIN, &rising, RISING);
-  enableInterrupt(SLAVE_MOVE_PIN, calc_pwm_value3, CHANGE);
+  pinMode(SLAVE_MOVE_PIN1, INPUT);
+  digitalWrite(SLAVE_MOVE_PIN1, HIGH);
+  // PCintPort::attachInterrupt(SLAVE_MOVE_PIN1, &rising, RISING);
+  enableInterrupt(SLAVE_MOVE_PIN1, calc_pwm_value3, CHANGE);
 
   pinMode(SLAVE_SPIN_PIN, INPUT);
   digitalWrite(SLAVE_SPIN_PIN, HIGH);
@@ -206,7 +235,8 @@ void setup(){//将步进电机用到的IO管脚设置成输出
   enableInterrupt(SLAVE_SPIN_PIN, calc_pwm_value4, CHANGE);
 
   cli();//stop interrupts
-  
+
+  // timer 1
   TCCR1A = 0;// set entire TCCR1A register to 0
   TCCR1B = 0;// same for TCCR1B
   TCNT1  = 0;//initialize counter value to 0
@@ -218,14 +248,31 @@ void setup(){//将步进电机用到的IO管脚设置成输出
   TCCR1B |= (1 << CS10); // no prescaler
   // enable timer compare interrupt
   TIMSK1 |= (1 << OCIE1A);
+
+  // timer3 
+  /*
+  TCCR3A = 0;// set entire TCCR1A register to 0
+  TCCR3B = 0;// same for TCCR1B
+  TCNT1  = 0;//initialize counter value to 0
+  // set compare match register for 1hz increments
+  OCR1A = 16000000.0f / 20000;
+  // turn on CTC mode
+  TCCR1B |= (1 << WGM12);
+  // Set CS12 and CS10 bits for 1024 prescaler
+  TCCR1B |= (1 << CS10); // no prescaler
+  // enable timer compare interrupt
+  TIMSK1 |= (1 << OCIE1A);
+  */
   
   sei();//allow interrupts
 
-  blockServo.attach(BLOCK_PIN);
-  clampServo.attach(CLAMP_PIN);
+  forceServo1.attach(FORCE_PIN1);
+  forceServo2.attach(FORCE_PIN2);
+  forceServo3.attach(FORCE_PIN3);
 
-  blockServo.write(min_servo_pulse);
-  clampServo.write(3100 - min_servo_pulse);
+  forceServo1.write(min_servo_pulse);
+  forceServo2.write(min_servo_pulse);
+  forceServo3.write(min_servo_pulse);
 
   // initialize serial communication:
   Serial.begin(115200);
@@ -475,40 +522,44 @@ byte readSwitchStatus() {
   return digitalRead(SWITCH_PIN) == LOW;
 }
 
-void triggerEvent(char type, char param) {
+void triggerEvent(char type, char param1, int param2) {
   if (type == 1) {
-    // init master tracker
-    master_limit_triggered = digitalRead(MASTER_LIMIT_PIN) == LOW;
-    if (master_limit_triggered) {
-      // forward limit triggered, need to pull back
-      master_status = 3;
-      master_remain_steps = pullback_steps;      
-      master_last_direction = 0;
-      digitalWrite(MASTER_DIR_PIN, LOW);
-    } else {
-      master_status = 0;
+    // loose force servos
+    triggerEvent(2, 1, 0);
+    triggerEvent(2, 2, 0);
+    if (param1 == 0) {
+      // init all
+      triggerEvent(1, 1, 0);
+      triggerEvent(1, 2, 0);
+      triggerEvent(1, 3, 0);
+    } else if (param1 == 1) {
+      // init master tracker
+      master_limit_triggered = digitalRead(MASTER_LIMIT_PIN) == LOW;
+      if (master_limit_triggered) {
+        // forward limit triggered, need to pull back
+        master_status = 3;
+        master_remain_steps = pullback_steps;      
+        master_last_direction = 0;
+        digitalWrite(MASTER_DIR_PIN, LOW);
+      } else {
+        master_status = 0;
+      }      
+    } else if (param1 == 2) {
+      // init slave tracker
+      slave_limit_triggered = digitalRead(SLAVE_LIMIT_PIN) == LOW;
+      if (slave_limit_triggered) {
+        // forward limit triggered, need to pull back
+        slave_status = 3;
+        slave_remain_steps = pullback_steps;      
+        slave_last_direction = 1;
+        digitalWrite(SLAVE_DIR_PIN, HIGH);
+      } else {
+        slave_status = 0;
+      }
+    } else if (param1 == 3) {
+      // init forces
+      
     }
-    // loose module
-    triggerEvent(11, 0);
-    triggerEvent(12, 0);
-  } else if (type == 2) {
-    // init slave tracker
-    slave_limit_triggered = digitalRead(SLAVE_LIMIT_PIN) == LOW;
-    if (slave_limit_triggered) {
-      // forward limit triggered, need to pull back
-      slave_status = 3;
-      slave_remain_steps = pullback_steps;      
-      slave_last_direction = 1;
-      digitalWrite(SLAVE_DIR_PIN, HIGH);
-    } else {
-      slave_status = 0;
-    }
-  } else if (type == 11) {
-    // trigger clamp
-    clampServo.write(map(param, 0, 100, 3100 - min_servo_pulse, 3100 - max_servo_pulse));
-  } else if (type == 12) {
-    // triger block
-    blockServo.write(map(param, 0, 100, min_servo_pulse, max_servo_pulse));  
   }
 }
 
@@ -649,9 +700,9 @@ void loop(){
         readBufferIndex = 0; 
       } else if (ch == '\n') {
         // trigger control
-        triggerEvent(readBuffer[1], readBuffer[2]);       
+        triggerEvent(readBuffer[1], readBuffer[2], readBuffer[3] + (readBuffer[4] << 8));       
       }
-      if (readBufferIndex < 3) {
+      if (readBufferIndex < 5) {
         readBuffer[readBufferIndex] = ch;
       }
       readBufferIndex ++;

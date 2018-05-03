@@ -15,7 +15,7 @@ namespace pcitest
     {
         private SerialPort ComDevice = new SerialPort();
         byte[] ReadBuffer = new byte[15];
-        byte[] WriteBuffer = new byte[4];
+        byte[] WriteBuffer = new byte[6];
         int ReadBufferIndex = 0;
 
         public Form1()
@@ -37,8 +37,11 @@ namespace pcitest
             //
             cbxMasterColor.SelectedIndex = 0;
             cbxSlaveColor.SelectedIndex = 1;
-            cbxClampStrength.SelectedIndex = 0;
-            cbxBlockStrength.SelectedIndex = 0;
+            cbxForce1.SelectedIndex = 0;
+            cbxForce2.SelectedIndex = 0;
+            cbxForce2.SelectedIndex = 0;
+            cbxMasterFine.SelectedIndex = 0;
+            cbxSlaveFine.SelectedIndex = 0;
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -185,35 +188,142 @@ namespace pcitest
         {
             WriteBuffer[0] = (byte) '^';
             WriteBuffer[1] = 1;
-            WriteBuffer[2] = (byte)cbxMasterColor.SelectedIndex;
-            WriteBuffer[3] = (byte) '\n';
+            WriteBuffer[2] = 1;
+            WriteBuffer[3] = (byte)cbxMasterColor.SelectedIndex;
+            WriteBuffer[4] = 0;
+            WriteBuffer[5] = (byte) '\n';
             SendData(WriteBuffer);
         }
 
         private void btnInitSlave_Click(object sender, EventArgs e)
         {
             WriteBuffer[0] = (byte)'^';
-            WriteBuffer[1] = 2;
-            WriteBuffer[2] = (byte)cbxSlaveColor.SelectedIndex;
-            WriteBuffer[3] = (byte)'\n';
-            SendData(WriteBuffer);
-        }
-
-        private void btnClamp_Click(object sender, EventArgs e)
-        {
-            WriteBuffer[0] = (byte)'^';
-            WriteBuffer[1] = 11;
-            WriteBuffer[2] = (byte)(cbxClampStrength.SelectedIndex * 10);
-            WriteBuffer[3] = (byte)'\n';
+            WriteBuffer[1] = 1;
+            WriteBuffer[2] = 2;
+            WriteBuffer[3] = (byte)cbxSlaveColor.SelectedIndex;
+            WriteBuffer[4] = 0;
+            WriteBuffer[5] = (byte)'\n';
             SendData(WriteBuffer);
         }
 
         private void btnBlock_Click(object sender, EventArgs e)
         {
+
+        }
+
+        private void btnInitAll_Click(object sender, EventArgs e)
+        {
             WriteBuffer[0] = (byte)'^';
-            WriteBuffer[1] = 12;
-            WriteBuffer[2] = (byte)(cbxBlockStrength.SelectedIndex * 10);
-            WriteBuffer[3] = (byte)'\n';
+            WriteBuffer[1] = 1;
+            WriteBuffer[2] = 0;
+            WriteBuffer[3] = 0;
+            WriteBuffer[4] = 0;
+            WriteBuffer[5] = (byte)'\n';
+            SendData(WriteBuffer);
+        }
+
+        private void btnInitForce_Click(object sender, EventArgs e)
+        {
+            WriteBuffer[0] = (byte)'^';
+            WriteBuffer[1] = 1;
+            WriteBuffer[2] = 3;
+            WriteBuffer[3] = 0;
+            WriteBuffer[4] = 0;
+            WriteBuffer[5] = (byte)'\n';
+            SendData(WriteBuffer);
+        }
+
+        private void btnForce2Pos_Click(object sender, EventArgs e)
+        {
+            int Position;
+            if (int.TryParse(txtForce2Pos.Text, out Position))
+            {
+                WriteBuffer[0] = (byte)'^';
+                WriteBuffer[1] = 2;
+                WriteBuffer[2] = 1;
+                WriteBuffer[3] = BitConverter.GetBytes(Position)[0];
+                WriteBuffer[4] = BitConverter.GetBytes(Position)[1];
+                WriteBuffer[5] = (byte)'\n';
+                SendData(WriteBuffer);
+            }
+            else
+            {
+                MessageBox.Show("请输入正确的数值", "出现错误");
+            }
+        }
+
+        private void btnForce3Pos_Click(object sender, EventArgs e)
+        {
+            int Position;
+            if (int.TryParse(txtForce3Pos.Text, out Position))
+            {
+                WriteBuffer[0] = (byte)'^';
+                WriteBuffer[1] = 2;
+                WriteBuffer[2] = 2;
+                WriteBuffer[3] = BitConverter.GetBytes(Position)[0];
+                WriteBuffer[4] = BitConverter.GetBytes(Position)[1];
+                WriteBuffer[5] = (byte)'\n';
+                SendData(WriteBuffer);
+            }
+            else
+            {
+                MessageBox.Show("请输入正确的数值", "出现错误");
+            }
+
+        }
+
+        private void btnForce1_Click(object sender, EventArgs e)
+        {
+            WriteBuffer[0] = (byte)'^';
+            WriteBuffer[1] = 3;
+            WriteBuffer[2] = 1;
+            WriteBuffer[3] = (byte)(cbxForce1.SelectedIndex * 10);
+            WriteBuffer[4] = 0;
+            WriteBuffer[5] = (byte)'\n';
+            SendData(WriteBuffer);
+        }
+
+        private void btnForce2_Click(object sender, EventArgs e)
+        {
+            WriteBuffer[0] = (byte)'^';
+            WriteBuffer[1] = 3;
+            WriteBuffer[2] = 2;
+            WriteBuffer[3] = (byte)(cbxForce2.SelectedIndex * 10);
+            WriteBuffer[4] = 0;
+            WriteBuffer[5] = (byte)'\n';
+            SendData(WriteBuffer);
+        }
+
+        private void btnForce3_Click(object sender, EventArgs e)
+        {
+            WriteBuffer[0] = (byte)'^';
+            WriteBuffer[1] = 3;
+            WriteBuffer[2] = 3;
+            WriteBuffer[3] = (byte)(cbxForce3.SelectedIndex * 10);
+            WriteBuffer[4] = 0;
+            WriteBuffer[5] = (byte)'\n';
+            SendData(WriteBuffer);
+        }
+
+        private void btnMasterFine_Click(object sender, EventArgs e)
+        {
+            WriteBuffer[0] = (byte)'^';
+            WriteBuffer[1] = 4;
+            WriteBuffer[2] = 1;
+            WriteBuffer[3] = (byte)cbxMasterFine.SelectedIndex ;
+            WriteBuffer[4] = 0;
+            WriteBuffer[5] = (byte)'\n';
+            SendData(WriteBuffer);
+        }
+
+        private void btnSlaveFine_Click(object sender, EventArgs e)
+        {
+            WriteBuffer[0] = (byte)'^';
+            WriteBuffer[1] = 4;
+            WriteBuffer[2] = 2;
+            WriteBuffer[3] = (byte)cbxSlaveFine.SelectedIndex;
+            WriteBuffer[4] = 0;
+            WriteBuffer[5] = (byte)'\n';
             SendData(WriteBuffer);
         }
     }

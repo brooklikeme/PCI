@@ -76,7 +76,13 @@ const int min_servo_pulse = 1120;
 const int max_servo_pulse = 1750; 
 
 volatile boolean master_toggle = 1;
+volatile int master_speed_rate = 1;
+volatile int master_speed_countdown = 0;
+
 volatile boolean slave_toggle = 1;
+volatile int slave_speed_rate = 1;
+volatile int slave_speed_countdown = 0;
+
 const int track_length = 750; 
 const int pullback_steps = 800;
 
@@ -121,20 +127,15 @@ int master_position = 0;
 int master_rotation = 0;
 
 ISR(TIMER1_COMPA_vect){
-  if (slave_remain_steps > 0) {
-    if (slave_toggle){
-      digitalWrite(SLAVE_STP_PIN, HIGH);
-    }
-    else{
-      digitalWrite(SLAVE_STP_PIN, LOW);
-      slave_remain_steps --;       
-      // update slave module position
-      slave_module_position += slave_last_direction ? 0 - distancePerStep : distancePerStep;
-    }
-    slave_toggle = !slave_toggle;   
-  }
-    
   if (master_remain_steps > 0) {
+    if (master_speed_rate > 1) {
+      if (master_speed_countdown > 0) {
+        master_speed_countdown --;        
+        return;
+      } else if (master_speed_countdown == 0) {
+        master_speed_countdown = master_speed_rate;
+      }
+    }
     if (master_toggle){
       digitalWrite(MASTER_STP_PIN, HIGH);
     }
@@ -145,6 +146,29 @@ ISR(TIMER1_COMPA_vect){
       master_module_position += master_last_direction ? distancePerStep : 0 - distancePerStep;
     }
     master_toggle = !master_toggle;   
+  }  
+}
+
+ISR(TIMER3_COMPA_vect){
+  if (slave_remain_steps > 0) {
+    if (slave_speed_rate > 1) {
+      if (slave_speed_countdown > 0) {
+        slave_speed_countdown --;        
+        return;
+      } else if (slave_speed_countdown == 0) {
+        slave_speed_countdown = slave_speed_rate;
+      }
+    }    
+    if (slave_toggle){
+      digitalWrite(SLAVE_STP_PIN, HIGH);
+    }
+    else{
+      digitalWrite(SLAVE_STP_PIN, LOW);
+      slave_remain_steps --;       
+      // update slave module position
+      slave_module_position += slave_last_direction ? 0 - distancePerStep : distancePerStep;
+    }
+    slave_toggle = !slave_toggle;   
   }
 }
 
@@ -241,7 +265,7 @@ void setup(){//将步进电机用到的IO管脚设置成输出
   TCCR1B = 0;// same for TCCR1B
   TCNT1  = 0;//initialize counter value to 0
   // set compare match register for 1hz increments
-  OCR1A = 16000000.0f / 20000;
+  OCR1A = 16000000.0f / 10000;
   // turn on CTC mode
   TCCR1B |= (1 << WGM12);
   // Set CS12 and CS10 bits for 1024 prescaler
@@ -249,20 +273,18 @@ void setup(){//将步进电机用到的IO管脚设置成输出
   // enable timer compare interrupt
   TIMSK1 |= (1 << OCIE1A);
 
-  // timer3 
-  /*
+  // timer 3 
   TCCR3A = 0;// set entire TCCR1A register to 0
   TCCR3B = 0;// same for TCCR1B
-  TCNT1  = 0;//initialize counter value to 0
+  TCNT3  = 0;//initialize counter value to 0
   // set compare match register for 1hz increments
-  OCR1A = 16000000.0f / 20000;
+  OCR3A = 16000000.0f / 10000;
   // turn on CTC mode
-  TCCR1B |= (1 << WGM12);
+  TCCR3B |= (1 << WGM12);
   // Set CS12 and CS10 bits for 1024 prescaler
-  TCCR1B |= (1 << CS10); // no prescaler
+  TCCR3B |= (1 << CS30); // no prescaler
   // enable timer compare interrupt
-  TIMSK1 |= (1 << OCIE1A);
-  */
+  TIMSK3 |= (1 << OCIE3A);
   
   sei();//allow interrupts
 
@@ -291,6 +313,8 @@ void initMaster() {
       master_tracing = 0;
       master_tracing_times = 0;
       master_module_position = 0;
+      // reset master speed rate
+      master_speed_rate = 1;
     }
   } else {
     if (digitalRead(MASTER_LIMIT_PIN) == LOW) {
@@ -316,6 +340,8 @@ void initSlave() {
       slave_tracing = 0;
       slave_tracing_times = 0;
       slave_module_position = 0;
+      // reset slave speed rate
+      slave_speed_rate = 1;      
     }
   } else {
     if (digitalRead(SLAVE_LIMIT_PIN) == LOW) {
@@ -533,6 +559,8 @@ void triggerEvent(char type, char param1, int param2) {
       triggerEvent(1, 2, 0);
       triggerEvent(1, 3, 0);
     } else if (param1 == 1) {
+      // slow down speed
+      master_speed_rate = 3;
       // init master tracker
       master_limit_triggered = digitalRead(MASTER_LIMIT_PIN) == LOW;
       if (master_limit_triggered) {
@@ -545,6 +573,8 @@ void triggerEvent(char type, char param1, int param2) {
         master_status = 0;
       }      
     } else if (param1 == 2) {
+      // slow down speed
+      slave_speed_rate = 3;
       // init slave tracker
       slave_limit_triggered = digitalRead(SLAVE_LIMIT_PIN) == LOW;
       if (slave_limit_triggered) {

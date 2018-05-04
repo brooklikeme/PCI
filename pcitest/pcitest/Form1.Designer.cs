@@ -77,6 +77,7 @@
             this.btnMasterFine = new System.Windows.Forms.Button();
             this.cbxSlaveFine = new System.Windows.Forms.ComboBox();
             this.btnSlaveFine = new System.Windows.Forms.Button();
+            this.btnForcePos = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.pbxSerialStatus)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.tbrMasterPos)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbxSwitchStatus)).BeginInit();
@@ -115,7 +116,7 @@
             // 
             // tbxShow
             // 
-            this.tbxShow.Location = new System.Drawing.Point(1298, 796);
+            this.tbxShow.Location = new System.Drawing.Point(1298, 818);
             this.tbxShow.Multiline = true;
             this.tbxShow.Name = "tbxShow";
             this.tbxShow.ScrollBars = System.Windows.Forms.ScrollBars.Both;
@@ -126,7 +127,7 @@
             // tbrMasterPos
             // 
             this.tbrMasterPos.BackColor = System.Drawing.SystemColors.Control;
-            this.tbrMasterPos.Location = new System.Drawing.Point(183, 315);
+            this.tbrMasterPos.Location = new System.Drawing.Point(183, 337);
             this.tbrMasterPos.Maximum = 1000;
             this.tbrMasterPos.Name = "tbrMasterPos";
             this.tbrMasterPos.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
@@ -136,7 +137,7 @@
             // 
             // pbrContrast
             // 
-            this.pbrContrast.Location = new System.Drawing.Point(203, 540);
+            this.pbrContrast.Location = new System.Drawing.Point(203, 562);
             this.pbrContrast.Maximum = 12000;
             this.pbrContrast.Name = "pbrContrast";
             this.pbrContrast.Size = new System.Drawing.Size(930, 58);
@@ -145,7 +146,7 @@
             // pbxSwitchStatus
             // 
             this.pbxSwitchStatus.BackColor = System.Drawing.Color.Gray;
-            this.pbxSwitchStatus.Location = new System.Drawing.Point(203, 762);
+            this.pbxSwitchStatus.Location = new System.Drawing.Point(203, 784);
             this.pbxSwitchStatus.Name = "pbxSwitchStatus";
             this.pbxSwitchStatus.Size = new System.Drawing.Size(228, 58);
             this.pbxSwitchStatus.TabIndex = 12;
@@ -155,7 +156,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.17801F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(22, 315);
+            this.label1.Location = new System.Drawing.Point(22, 337);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(149, 31);
             this.label1.TabIndex = 13;
@@ -165,7 +166,7 @@
             // tbrMasterAngle
             // 
             this.tbrMasterAngle.BackColor = System.Drawing.SystemColors.Control;
-            this.tbrMasterAngle.Location = new System.Drawing.Point(1147, 315);
+            this.tbrMasterAngle.Location = new System.Drawing.Point(1147, 337);
             this.tbrMasterAngle.Maximum = 360;
             this.tbrMasterAngle.Name = "tbrMasterAngle";
             this.tbrMasterAngle.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
@@ -177,7 +178,7 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.17801F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(482, 281);
+            this.label2.Location = new System.Drawing.Point(482, 303);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(162, 31);
             this.label2.TabIndex = 16;
@@ -187,7 +188,7 @@
             // 
             this.label3.AutoSize = true;
             this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.17801F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label3.Location = new System.Drawing.Point(1242, 281);
+            this.label3.Location = new System.Drawing.Point(1242, 303);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(100, 31);
             this.label3.TabIndex = 17;
@@ -197,7 +198,7 @@
             // 
             this.lbMasterPos.AutoSize = true;
             this.lbMasterPos.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.17801F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbMasterPos.Location = new System.Drawing.Point(655, 281);
+            this.lbMasterPos.Location = new System.Drawing.Point(655, 303);
             this.lbMasterPos.Name = "lbMasterPos";
             this.lbMasterPos.Size = new System.Drawing.Size(60, 31);
             this.lbMasterPos.TabIndex = 18;
@@ -207,7 +208,7 @@
             // 
             this.lbMasterAngle.AutoSize = true;
             this.lbMasterAngle.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.17801F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbMasterAngle.Location = new System.Drawing.Point(1341, 281);
+            this.lbMasterAngle.Location = new System.Drawing.Point(1341, 303);
             this.lbMasterAngle.Name = "lbMasterAngle";
             this.lbMasterAngle.Size = new System.Drawing.Size(60, 31);
             this.lbMasterAngle.TabIndex = 19;
@@ -217,7 +218,7 @@
             // 
             this.lbSlaveAngle.AutoSize = true;
             this.lbSlaveAngle.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.17801F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbSlaveAngle.Location = new System.Drawing.Point(1341, 410);
+            this.lbSlaveAngle.Location = new System.Drawing.Point(1341, 432);
             this.lbSlaveAngle.Name = "lbSlaveAngle";
             this.lbSlaveAngle.Size = new System.Drawing.Size(60, 31);
             this.lbSlaveAngle.TabIndex = 26;
@@ -227,7 +228,7 @@
             // 
             this.lbSlavePos.AutoSize = true;
             this.lbSlavePos.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.17801F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbSlavePos.Location = new System.Drawing.Point(655, 410);
+            this.lbSlavePos.Location = new System.Drawing.Point(655, 432);
             this.lbSlavePos.Name = "lbSlavePos";
             this.lbSlavePos.Size = new System.Drawing.Size(60, 31);
             this.lbSlavePos.TabIndex = 25;
@@ -237,7 +238,7 @@
             // 
             this.label8.AutoSize = true;
             this.label8.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.17801F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label8.Location = new System.Drawing.Point(1242, 410);
+            this.label8.Location = new System.Drawing.Point(1242, 432);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(100, 31);
             this.label8.TabIndex = 24;
@@ -247,7 +248,7 @@
             // 
             this.label9.AutoSize = true;
             this.label9.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.17801F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label9.Location = new System.Drawing.Point(482, 410);
+            this.label9.Location = new System.Drawing.Point(482, 432);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(162, 31);
             this.label9.TabIndex = 23;
@@ -256,7 +257,7 @@
             // tbrSlaveAngle
             // 
             this.tbrSlaveAngle.BackColor = System.Drawing.SystemColors.Control;
-            this.tbrSlaveAngle.Location = new System.Drawing.Point(1147, 445);
+            this.tbrSlaveAngle.Location = new System.Drawing.Point(1147, 467);
             this.tbrSlaveAngle.Maximum = 3600;
             this.tbrSlaveAngle.Name = "tbrSlaveAngle";
             this.tbrSlaveAngle.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
@@ -268,7 +269,7 @@
             // 
             this.label10.AutoSize = true;
             this.label10.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.17801F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label10.Location = new System.Drawing.Point(22, 445);
+            this.label10.Location = new System.Drawing.Point(22, 467);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(149, 31);
             this.label10.TabIndex = 21;
@@ -277,7 +278,7 @@
             // tbrSlavePos
             // 
             this.tbrSlavePos.BackColor = System.Drawing.SystemColors.Control;
-            this.tbrSlavePos.Location = new System.Drawing.Point(183, 445);
+            this.tbrSlavePos.Location = new System.Drawing.Point(183, 467);
             this.tbrSlavePos.Maximum = 1000;
             this.tbrSlavePos.Name = "tbrSlavePos";
             this.tbrSlavePos.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
@@ -289,7 +290,7 @@
             // 
             this.label11.AutoSize = true;
             this.label11.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.17801F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label11.Location = new System.Drawing.Point(22, 554);
+            this.label11.Location = new System.Drawing.Point(22, 576);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(149, 31);
             this.label11.TabIndex = 27;
@@ -299,7 +300,7 @@
             // 
             this.lbContrast.AutoSize = true;
             this.lbContrast.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.17801F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbContrast.Location = new System.Drawing.Point(1162, 554);
+            this.lbContrast.Location = new System.Drawing.Point(1162, 576);
             this.lbContrast.Name = "lbContrast";
             this.lbContrast.Size = new System.Drawing.Size(60, 31);
             this.lbContrast.TabIndex = 29;
@@ -309,7 +310,7 @@
             // 
             this.label13.AutoSize = true;
             this.label13.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.17801F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label13.Location = new System.Drawing.Point(1292, 554);
+            this.label13.Location = new System.Drawing.Point(1292, 576);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(116, 31);
             this.label13.TabIndex = 28;
@@ -319,7 +320,7 @@
             // 
             this.lbPressure.AutoSize = true;
             this.lbPressure.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.17801F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbPressure.Location = new System.Drawing.Point(1162, 662);
+            this.lbPressure.Location = new System.Drawing.Point(1162, 684);
             this.lbPressure.Name = "lbPressure";
             this.lbPressure.Size = new System.Drawing.Size(60, 31);
             this.lbPressure.TabIndex = 33;
@@ -329,7 +330,7 @@
             // 
             this.label15.AutoSize = true;
             this.label15.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.17801F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label15.Location = new System.Drawing.Point(1292, 662);
+            this.label15.Location = new System.Drawing.Point(1292, 684);
             this.label15.Name = "label15";
             this.label15.Size = new System.Drawing.Size(137, 31);
             this.label15.TabIndex = 32;
@@ -339,7 +340,7 @@
             // 
             this.label16.AutoSize = true;
             this.label16.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.17801F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label16.Location = new System.Drawing.Point(22, 662);
+            this.label16.Location = new System.Drawing.Point(22, 684);
             this.label16.Name = "label16";
             this.label16.Size = new System.Drawing.Size(149, 31);
             this.label16.TabIndex = 31;
@@ -347,7 +348,7 @@
             // 
             // pbrPressure
             // 
-            this.pbrPressure.Location = new System.Drawing.Point(203, 649);
+            this.pbrPressure.Location = new System.Drawing.Point(203, 671);
             this.pbrPressure.Maximum = 400;
             this.pbrPressure.Name = "pbrPressure";
             this.pbrPressure.Size = new System.Drawing.Size(930, 58);
@@ -357,7 +358,7 @@
             // 
             this.label17.AutoSize = true;
             this.label17.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.17801F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label17.Location = new System.Drawing.Point(22, 776);
+            this.label17.Location = new System.Drawing.Point(22, 798);
             this.label17.Name = "label17";
             this.label17.Size = new System.Drawing.Size(167, 31);
             this.label17.TabIndex = 34;
@@ -367,7 +368,7 @@
             // 
             this.lbSwitchStatus.AutoSize = true;
             this.lbSwitchStatus.Font = new System.Drawing.Font("Microsoft Sans Serif", 10.17801F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lbSwitchStatus.Location = new System.Drawing.Point(460, 776);
+            this.lbSwitchStatus.Location = new System.Drawing.Point(460, 798);
             this.lbSwitchStatus.Name = "lbSwitchStatus";
             this.lbSwitchStatus.Size = new System.Drawing.Size(41, 31);
             this.lbSwitchStatus.TabIndex = 35;
@@ -435,14 +436,14 @@
             "80",
             "90",
             "100"});
-            this.cbxForce1.Location = new System.Drawing.Point(1048, 112);
+            this.cbxForce1.Location = new System.Drawing.Point(365, 178);
             this.cbxForce1.Name = "cbxForce1";
             this.cbxForce1.Size = new System.Drawing.Size(85, 33);
             this.cbxForce1.TabIndex = 41;
             // 
             // btnForce1
             // 
-            this.btnForce1.Location = new System.Drawing.Point(1138, 107);
+            this.btnForce1.Location = new System.Drawing.Point(455, 173);
             this.btnForce1.Name = "btnForce1";
             this.btnForce1.Size = new System.Drawing.Size(95, 43);
             this.btnForce1.TabIndex = 40;
@@ -466,14 +467,14 @@
             "80",
             "90",
             "100"});
-            this.cbxForce2.Location = new System.Drawing.Point(1245, 111);
+            this.cbxForce2.Location = new System.Drawing.Point(562, 177);
             this.cbxForce2.Name = "cbxForce2";
             this.cbxForce2.Size = new System.Drawing.Size(85, 33);
             this.cbxForce2.TabIndex = 43;
             // 
             // btnForce2
             // 
-            this.btnForce2.Location = new System.Drawing.Point(1341, 106);
+            this.btnForce2.Location = new System.Drawing.Point(658, 172);
             this.btnForce2.Name = "btnForce2";
             this.btnForce2.Size = new System.Drawing.Size(97, 43);
             this.btnForce2.TabIndex = 42;
@@ -517,14 +518,14 @@
             "80",
             "90",
             "100"});
-            this.cbxForce3.Location = new System.Drawing.Point(1452, 110);
+            this.cbxForce3.Location = new System.Drawing.Point(769, 176);
             this.cbxForce3.Name = "cbxForce3";
             this.cbxForce3.Size = new System.Drawing.Size(85, 33);
             this.cbxForce3.TabIndex = 47;
             // 
             // btnForce3
             // 
-            this.btnForce3.Location = new System.Drawing.Point(1548, 105);
+            this.btnForce3.Location = new System.Drawing.Point(865, 171);
             this.btnForce3.Name = "btnForce3";
             this.btnForce3.Size = new System.Drawing.Size(97, 43);
             this.btnForce3.TabIndex = 46;
@@ -575,14 +576,14 @@
             this.cbxMasterFine.Items.AddRange(new object[] {
             "退出",
             "进入"});
-            this.cbxMasterFine.Location = new System.Drawing.Point(365, 183);
+            this.cbxMasterFine.Location = new System.Drawing.Point(365, 243);
             this.cbxMasterFine.Name = "cbxMasterFine";
             this.cbxMasterFine.Size = new System.Drawing.Size(85, 33);
             this.cbxMasterFine.TabIndex = 53;
             // 
             // btnMasterFine
             // 
-            this.btnMasterFine.Location = new System.Drawing.Point(455, 178);
+            this.btnMasterFine.Location = new System.Drawing.Point(455, 238);
             this.btnMasterFine.Name = "btnMasterFine";
             this.btnMasterFine.Size = new System.Drawing.Size(302, 43);
             this.btnMasterFine.TabIndex = 52;
@@ -597,14 +598,14 @@
             this.cbxSlaveFine.Items.AddRange(new object[] {
             "退出",
             "进入"});
-            this.cbxSlaveFine.Location = new System.Drawing.Point(779, 183);
+            this.cbxSlaveFine.Location = new System.Drawing.Point(779, 243);
             this.cbxSlaveFine.Name = "cbxSlaveFine";
             this.cbxSlaveFine.Size = new System.Drawing.Size(85, 33);
             this.cbxSlaveFine.TabIndex = 55;
             // 
             // btnSlaveFine
             // 
-            this.btnSlaveFine.Location = new System.Drawing.Point(869, 178);
+            this.btnSlaveFine.Location = new System.Drawing.Point(869, 238);
             this.btnSlaveFine.Name = "btnSlaveFine";
             this.btnSlaveFine.Size = new System.Drawing.Size(302, 43);
             this.btnSlaveFine.TabIndex = 54;
@@ -612,11 +613,22 @@
             this.btnSlaveFine.UseVisualStyleBackColor = true;
             this.btnSlaveFine.Click += new System.EventHandler(this.btnSlaveFine_Click);
             // 
+            // btnForcePos
+            // 
+            this.btnForcePos.Location = new System.Drawing.Point(998, 105);
+            this.btnForcePos.Name = "btnForcePos";
+            this.btnForcePos.Size = new System.Drawing.Size(224, 43);
+            this.btnForcePos.TabIndex = 56;
+            this.btnForcePos.Text = "加紧机构位置设置";
+            this.btnForcePos.UseVisualStyleBackColor = true;
+            this.btnForcePos.Click += new System.EventHandler(this.btnForcePos_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(191F, 191F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
-            this.ClientSize = new System.Drawing.Size(1803, 860);
+            this.ClientSize = new System.Drawing.Size(1809, 940);
+            this.Controls.Add(this.btnForcePos);
             this.Controls.Add(this.cbxSlaveFine);
             this.Controls.Add(this.btnSlaveFine);
             this.Controls.Add(this.cbxMasterFine);
@@ -734,6 +746,7 @@
         private System.Windows.Forms.Button btnMasterFine;
         private System.Windows.Forms.ComboBox cbxSlaveFine;
         private System.Windows.Forms.Button btnSlaveFine;
+        private System.Windows.Forms.Button btnForcePos;
     }
 }
 

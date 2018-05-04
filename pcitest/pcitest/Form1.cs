@@ -326,5 +326,16 @@ namespace pcitest
             WriteBuffer[5] = (byte)'\n';
             SendData(WriteBuffer);
         }
+
+        private void btnForcePos_Click(object sender, EventArgs e)
+        {
+                WriteBuffer[0] = (byte)'^';
+                WriteBuffer[1] = 2;
+                WriteBuffer[2] = 3;
+                WriteBuffer[3] = 0;
+                WriteBuffer[4] = 0;
+                WriteBuffer[5] = (byte)'\n';
+                SendData(WriteBuffer);
+        }
     }
 }

@@ -2,8 +2,8 @@
 #include <ServoTimer2.h>  // the servo library
 
 #define FORCE_PIN1 11
-#define FORCE_PIN2 10
-#define FORCE_PIN3 111
+#define FORCE_PIN2 6
+#define FORCE_PIN3 5
 
 
 #define MASTER_STP_PIN       54
@@ -22,26 +22,26 @@
 #define FORCE_DIR_PIN3       34
 #define FORCE_ENA_PIN3       30
 
-#define CONTRAST_PIN A11
-#define PRESSURE_PIN A12
-#define SWITCH_PIN 16
+#define CONTRAST_PIN A3
+#define PRESSURE_PIN A4
+#define SWITCH_PIN 1
 
 // #define MASTER_SETTING_PIN A4 // set tracking color for master module
 // #define SLAVE_SETTING_PIN A5 // set tracking color for slave module
 
-#define MASTER_MOVE_PIN1 1 // get master move pwm pulse
-#define MASTER_SPIN_PIN1 0 // get master spin pwm pulse
-#define MASTER_SETTING_PIN1 57// 
+#define MASTER_MOVE_PIN1 A9 // get master move pwm pulse
+#define MASTER_SPIN_PIN1 A10 // get master spin pwm pulse
+#define MASTER_SETTING_PIN1 16// 
 
-#define MASTER_MOVE_PIN2 63 //
-#define MASTER_SETTING_PIN2 59// 
+#define MASTER_MOVE_PIN2 17 //
+#define MASTER_SETTING_PIN2 23// 
 
-#define SLAVE_MOVE_PIN1 40 // get slave move pwm pulse
-#define SLAVE_SPIN_PIN1 42 // get slave spin pwm pulse
-#define SLAVE_SETTING_PIN1 64 //
+#define SLAVE_MOVE_PIN1 A11 // get slave move pwm pulse
+#define SLAVE_SPIN_PIN1 A12 // get slave spin pwm pulse
+#define SLAVE_SETTING_PIN1 25 //
 
-#define SLAVE_MOVE_PIN2 52
-#define SLAVE_SETTING_PIN2 53 // 
+#define SLAVE_MOVE_PIN2 27
+#define SLAVE_SETTING_PIN2 29 // 
 
 
 #define MASTER_LIMIT_PIN 3 // master limit switch pin
@@ -55,8 +55,8 @@
 #define PWM_CH2  1
 #define PWM_CH3  2
 #define PWM_CH4  3
-#define PWM_CH4  4
-#define PWM_CH4  5
+#define PWM_CH5  4
+#define PWM_CH6  5
 
 volatile int prev_times[PWM_PINS];
 volatile int pwm_values[PWM_PINS];
@@ -67,13 +67,13 @@ const int distancePerRev = 60;
 const int distancePerForceRev = 40;
 const float distancePerStep = float(distancePerRev) / float(stepsPerRev);
 const float distancePerForceStep = float(distancePerForceRev) / float(stepsPerRev);
-const int master_vision_width = 60;
-const int slave_vision_width = 60;
+const int master_vision_width = 26.45;
+const int slave_vision_width = 26.45;
 const int track_offset = 30;
 const int force2_offset = 126;
 const int force_distance = 18;
 const int force3_offset = force2_offset + force_distance;
-int minSteps = 80;// stepsPerRev / (distancePerRev * 2);
+int minSteps = 40;// stepsPerRev / (distancePerRev * 2);
 volatile int master_remain_steps = 0;
 volatile int slave_remain_steps = 0;
 volatile int force2_remain_steps = 0;
@@ -95,7 +95,7 @@ volatile float force3_module_position = 0;
 float force2_setting_position = 0;
 float force3_setting_position = 0;
 
-const int trackThreshold = 100;
+const int trackThreshold = 80;
 
 // servo constants
 const int min_servo_pulse = 1120;
@@ -112,7 +112,7 @@ volatile int slave_speed_countdown = 0;
 volatile boolean force2_toggle = 1;
 volatile boolean force3_toggle = 1;
 
-const int track_length = 900; 
+const int track_length = 850; 
 const int pullback_steps = 800;
 const int force_pullback_steps = 80;
 
@@ -247,8 +247,8 @@ void calc_pwm_value1() { calc_pwm(PWM_CH1, MASTER_MOVE_PIN1); }
 void calc_pwm_value2() { calc_pwm(PWM_CH2, MASTER_SPIN_PIN1); }
 void calc_pwm_value3() { calc_pwm(PWM_CH3, MASTER_MOVE_PIN2); }
 void calc_pwm_value4() { calc_pwm(PWM_CH4, SLAVE_MOVE_PIN1); }
-void calc_pwm_value5() { calc_pwm(PWM_CH3, SLAVE_SPIN_PIN1); }
-void calc_pwm_value6() { calc_pwm(PWM_CH4, SLAVE_MOVE_PIN2); }
+void calc_pwm_value5() { calc_pwm(PWM_CH5, SLAVE_SPIN_PIN1); }
+void calc_pwm_value6() { calc_pwm(PWM_CH6, SLAVE_MOVE_PIN2); }
 
 /*
 void rising() {
@@ -398,10 +398,6 @@ void setup(){//将步进电机用到的IO管脚设置成输出
 
   // initialize serial communication:
   Serial.begin(115200);
-
-  // init master and slave module
-  // triggerEvent(1, 1);
-  // triggerEvent(2, 1);
 }
 
 void initMaster() {
@@ -565,7 +561,7 @@ void trackMaster(int input) {
     master_seeking = 0;
     master_tracing_times = 0;
     master_remain_steps = 0;
-  } else if ((master_module_position > track_length  || digitalRead(MASTER_LIMIT_PIN) == LOW) && master_last_direction) {
+  } else if ((master_module_position > force2_module_position  || digitalRead(MASTER_LIMIT_PIN) == LOW) && master_last_direction) {
     forwardLimit = true;
     master_seeking = 0;
     master_remain_steps = 0;
@@ -645,7 +641,7 @@ void trackSlave(int input) {
     slave_tracing = 0;
     slave_tracing_times = 0;
     slave_remain_steps = 0;
-  } else if ((slave_module_position > track_length  || digitalRead(SLAVE_LIMIT_PIN) == LOW) && !slave_last_direction) {
+  } else if ((slave_module_position > force2_module_position  || digitalRead(SLAVE_LIMIT_PIN) == LOW) && !slave_last_direction) {
     forwardLimit = true;
     slave_seeking = 0;
     slave_remain_steps = 0;
@@ -785,8 +781,7 @@ void triggerEvent(char type, char param1, int param2) {
         force2_status = 0;
       }      
     }
-  }
-  else if (type == 2) {
+  } else if (type == 2) {
     // set force positions
     if (param1 == 1) {
       // pre set force2 position
@@ -810,6 +805,14 @@ void triggerEvent(char type, char param1, int param2) {
         force2_status = 2;
         force3_status = 2;        
       }
+    }
+  } else if (type == 3) {
+    if (param1 == 1) {
+      forceServo1.write(map(param2, 0, 100, min_servo_pulse, max_servo_pulse));
+    } else if (param1 == 2) {
+      forceServo2.write(map(param2, 0, 100, min_servo_pulse, max_servo_pulse));
+    } else if (param1 == 3) {
+      forceServo3.write(map(param2, 0, 100, min_servo_pulse, max_servo_pulse));
     }
   }
 }
@@ -884,7 +887,8 @@ void loop(){
     
     prevInitTime = currTime;
         
-    
+
+    /*
     Serial.print("master tracing: ");
     Serial.print(master_tracing);
     Serial.print(", slave tracing: ");
@@ -896,14 +900,14 @@ void loop(){
     Serial.print(", slave move value: ");
     Serial.print(slave_move_value);
     Serial.print(", slave spin value: ");
-    Serial.println(slave_spin_value);    
+    Serial.println(slave_spin_value); */   
   }
   
   if (currTime - prevReadTime > readInterval) {
     // read pressure();
-    pressure = force3_module_position * 10; //readPressure();
+    pressure = readPressure();
     // read contrast()
-    contrast = force2_module_position * 10; // readContrast();
+    contrast = readContrast();
     // read switch status
     switchStatus = readSwitchStatus();    
     // write serial

@@ -1,9 +1,9 @@
 #include <EnableInterrupt.h>
 #include <ServoTimer2.h>  // the servo library
 
-#define FORCE_PIN1 11
+#define FORCE_PIN1 5
 #define FORCE_PIN2 6
-#define FORCE_PIN3 5
+#define FORCE_PIN3 4
 
 
 #define MASTER_STP_PIN       54
@@ -24,7 +24,7 @@
 
 #define CONTRAST_PIN A3
 #define PRESSURE_PIN A4
-#define SWITCH_PIN 1
+#define SWITCH_PIN 0
 
 // #define MASTER_SETTING_PIN A4 // set tracking color for master module
 // #define SLAVE_SETTING_PIN A5 // set tracking color for slave module
@@ -67,12 +67,14 @@ const int distancePerRev = 60;
 const int distancePerForceRev = 40;
 const float distancePerStep = float(distancePerRev) / float(stepsPerRev);
 const float distancePerForceStep = float(distancePerForceRev) / float(stepsPerRev);
-const int master_vision_width = 26.45;
-const int slave_vision_width = 26.45;
-const int track_offset = 30;
+const int master_vision_width = 39.4;
+const int slave_vision_width = 39.4;
+const int track_offset = 74;
 const int force2_offset = 126;
 const int force_distance = 18;
 const int force3_offset = force2_offset + force_distance;
+const int min_master_forward_offset = 10;
+const int min_slave_forward_offset = 10;
 int minSteps = 40;// stepsPerRev / (distancePerRev * 2);
 volatile int master_remain_steps = 0;
 volatile int slave_remain_steps = 0;
@@ -113,7 +115,7 @@ volatile boolean force2_toggle = 1;
 volatile boolean force3_toggle = 1;
 
 const int track_length = 850; 
-const int pullback_steps = 800;
+const int pullback_steps = 1200;
 const int force_pullback_steps = 80;
 
 ServoTimer2 forceServo1;
@@ -128,7 +130,7 @@ int master_tracing = 0;
 int master_tracing_times = 0;
 int slave_tracing = 0;
 int slave_tracing_times = 0;
-const int tracing_ok_times = 100;
+const int tracing_ok_times = 10;
 
 int master_seeking = 0;
 int master_seeking_times = 0;
@@ -352,7 +354,7 @@ void setup(){//将步进电机用到的IO管脚设置成输出
   TCCR1B = 0;// same for TCCR1B
   TCNT1  = 0;//initialize counter value to 0
   // set compare match register for 1hz increments
-  OCR1A = 16000000.0f / 10000;
+  OCR1A = 16000000.0f / 6000;
   // turn on CTC mode
   TCCR1B |= (1 << WGM12);
   // Set CS12 and CS10 bits for 1024 prescaler
@@ -365,7 +367,7 @@ void setup(){//将步进电机用到的IO管脚设置成输出
   TCCR3B = 0;// same for TCCR1B
   TCNT3  = 0;//initialize counter value to 0
   // set compare match register for 1hz increments
-  OCR3A = 16000000.0f / 10000;
+  OCR3A = 16000000.0f / 6000;
   // turn on CTC mode
   TCCR3B |= (1 << WGM12);
   // Set CS12 and CS10 bits for 1024 prescaler
@@ -561,7 +563,7 @@ void trackMaster(int input) {
     master_seeking = 0;
     master_tracing_times = 0;
     master_remain_steps = 0;
-  } else if ((master_module_position > force2_module_position  || digitalRead(MASTER_LIMIT_PIN) == LOW) && master_last_direction) {
+  } else if ((master_module_position > force2_module_position - min_master_forward_offset  || digitalRead(MASTER_LIMIT_PIN) == LOW) && master_last_direction) {
     forwardLimit = true;
     master_seeking = 0;
     master_remain_steps = 0;
@@ -641,7 +643,7 @@ void trackSlave(int input) {
     slave_tracing = 0;
     slave_tracing_times = 0;
     slave_remain_steps = 0;
-  } else if ((slave_module_position > force2_module_position  || digitalRead(SLAVE_LIMIT_PIN) == LOW) && !slave_last_direction) {
+  } else if ((slave_module_position > force2_module_position - min_slave_forward_offset  || digitalRead(SLAVE_LIMIT_PIN) == LOW) && !slave_last_direction) {
     forwardLimit = true;
     slave_seeking = 0;
     slave_remain_steps = 0;
@@ -946,10 +948,10 @@ void loop(){
     
     int master_position = 10 * (master_module_position - (master_move_value * 1.0 * master_vision_width / 320));
     // Serial.println(master_position);
-    master_position = master_position >= 0 ? (int)master_position : 0;
-    int slave_position = 10 * (slave_module_position - (slave_move_value * 1.0 * slave_vision_width / 320));
+    master_position = master_position >= 0 && master_tracing ? (int)master_position : 0;
+    int slave_position = 10 * (slave_module_position + (slave_move_value * 1.0 * slave_vision_width / 320));
     // Serial.println(master_position);
-    slave_position = slave_position >= 0 ? (int)slave_position : 0;    
+    slave_position = slave_position >= 0 && slave_tracing ? (int)slave_position : 0;    
     currSendBuffer[0] = '^';
     currSendBuffer[1] = lowByte(master_position);
     currSendBuffer[2] = highByte(master_position);
@@ -958,7 +960,7 @@ void loop(){
     currSendBuffer[5] = lowByte(slave_position);
     currSendBuffer[6] = highByte(slave_position);
     currSendBuffer[7] = lowByte(slave_spin_value);
-    currSendBuffer[8] = lowByte(slave_spin_value);
+    currSendBuffer[8] = highByte(slave_spin_value);
     currSendBuffer[9] = lowByte(contrast);
     currSendBuffer[10] = highByte(contrast);
     currSendBuffer[11] = lowByte(pressure);

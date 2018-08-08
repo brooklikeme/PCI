@@ -1,9 +1,9 @@
 #include <EnableInterrupt.h>
 #include <ServoTimer2.h>  // the servo library
 
-#define FORCE_PIN1 4
-#define FORCE_PIN2 5
-#define FORCE_PIN3 6
+#define FORCE_PIN1 5
+#define FORCE_PIN2 6
+#define FORCE_PIN3 4
 
 
 #define MASTER_STP_PIN       54
@@ -25,7 +25,6 @@
 #define CONTRAST_PIN A3
 #define PRESSURE_PIN A4
 #define SWITCH_PIN 59
-#define SWITCH_PIN2 44
 
 // #define MASTER_SETTING_PIN A4 // set tracking color for master module
 // #define SLAVE_SETTING_PIN A5 // set tracking color for slave module
@@ -48,7 +47,7 @@
 #define MASTER_LIMIT_PIN 3 // master limit switch pin
 #define SLAVE_LIMIT_PIN 2 // slave limit switch pin
 #define FORCE_LIMIT_PIN2 14
-#define FORCE_LIMIT_PIN3 15
+#define FORCE_LIMIT_PIN3 19
 
 #define PWM_PINS  6
 

@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO.Ports;
+using System.Threading; 
 
 namespace pcitest
 {
@@ -30,18 +31,10 @@ namespace pcitest
             {
                 cbxSerialPorts.SelectedIndex = 0;
             }
-            pbxSerialStatus.BackColor = Color.Red;
+            pbxStatus.BackColor = Color.Red;
 
             ComDevice.DataReceived += new SerialDataReceivedEventHandler(Com_DataReceived);//绑定事件
 
-            //
-            cbxMasterColor.SelectedIndex = 0;
-            cbxSlaveColor.SelectedIndex = 1;
-            cbxForce1.SelectedIndex = 0;
-            cbxForce2.SelectedIndex = 0;
-            cbxForce2.SelectedIndex = 0;
-            cbxMasterFine.SelectedIndex = 0;
-            cbxSlaveFine.SelectedIndex = 0;
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -54,13 +47,38 @@ namespace pcitest
             this.BeginInvoke(new MethodInvoker(delegate
             {
                 //
-                double masterPos = BitConverter.ToInt16(new byte[] {ReadBuffer[1], ReadBuffer[2]}, 0) * 1.0 / 10;
-                int masterAngle = BitConverter.ToInt16(new byte[] {ReadBuffer[3], ReadBuffer[4]}, 0);
-                double slavePos = BitConverter.ToInt16(new byte[] {ReadBuffer[5], ReadBuffer[6]}, 0) * 1.0 / 10;
-                int slaveAngle = BitConverter.ToInt16(new byte[] {ReadBuffer[7], ReadBuffer[8]}, 0);
-                int contrast = BitConverter.ToInt16(new byte[] {ReadBuffer[9], ReadBuffer[10]}, 0);
-                int pressure = BitConverter.ToInt16(new byte[] {ReadBuffer[11], ReadBuffer[12]}, 0);
-                byte switchStatus = ReadBuffer[13];
+                byte status = ReadBuffer[1];
+                double masterPos = BitConverter.ToInt16(new byte[] {ReadBuffer[2], ReadBuffer[3]}, 0) * 1.0 / 10;
+                int masterAngle = BitConverter.ToInt16(new byte[] {ReadBuffer[4], ReadBuffer[5]}, 0);
+                double slavePos = BitConverter.ToInt16(new byte[] {ReadBuffer[6], ReadBuffer[7]}, 0) * 1.0 / 10;
+                int slaveAngle = BitConverter.ToInt16(new byte[] {ReadBuffer[8], ReadBuffer[9]}, 0);
+                int contrast = BitConverter.ToInt16(new byte[] {ReadBuffer[10], ReadBuffer[11]}, 0);
+                int pressure = BitConverter.ToInt16(new byte[] {ReadBuffer[12], ReadBuffer[13]}, 0);
+                byte switchStatus1 = ReadBuffer[14];
+                byte switchStatus2 = ReadBuffer[15];
+
+                if (status == 0)
+                {
+                    pbxStatus.BackColor = Color.Yellow;
+                    lbStatus.Text = "未初始化";
+                    return;
+                }
+                else if (status == 1) {
+                    pbxStatus.BackColor = Color.Orange;
+                    lbStatus.Text = "初始化中...";
+                    return;
+                }
+                else if (status == 2)
+                {
+                    pbxStatus.BackColor = Color.Green;
+                    lbStatus.Text = "运行中";
+                }
+                else if (status == 255)
+                {
+                    pbxStatus.BackColor = Color.Orange;
+                    lbStatus.Text = "参数错误";
+                    return;
+                }
 
                 if (masterPos >= 0 && (int)masterPos <= tbrMasterPos.Maximum)
                     tbrMasterPos.Value = (int)masterPos;
@@ -83,8 +101,11 @@ namespace pcitest
                     pbrPressure.Value = pressure;
                 lbPressure.Text = pressure.ToString();
 
-                pbxSwitchStatus.BackColor = switchStatus == 1 ? Color.Green : Color.Gray;
-                lbSwitchStatus.Text = switchStatus == 1 ? "开" : "关";
+                pbxSwitchStatus1.BackColor = switchStatus1 == 1 ? Color.Green : Color.Gray;
+                lbSwitchStatus1.Text = switchStatus1 == 1 ? "开" : "关";
+
+                pbxSwitchStatus2.BackColor = switchStatus2 == 1 ? Color.Green : Color.Gray;
+                lbSwitchStatus2.Text = switchStatus2 == 1 ? "开" : "关";
 
             }));
         }
@@ -122,7 +143,7 @@ namespace pcitest
                     // start byte
                     ReadBufferIndex = 0;
                 }
-                else if (item == '\n' && ReadBufferIndex == 14)
+                else if (item == '\n' && ReadBufferIndex == 16)
                 {
                     // append text
                     ParseContent();
@@ -157,7 +178,7 @@ namespace pcitest
                     return;
                 }
                 btnConnect.Text = "断开连接";
-                pbxSerialStatus.BackColor = Color.Green;
+                pbxStatus.BackColor = Color.Green;
             }
             else
             {
@@ -170,7 +191,8 @@ namespace pcitest
                     MessageBox.Show(ex.Message, "断开错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
                 btnConnect.Text = "连接";
-                pbxSerialStatus.BackColor = Color.Red;
+                pbxStatus.BackColor = Color.Red;
+                lbStatus.Text = "未连接";
             }
         }
 
@@ -189,7 +211,7 @@ namespace pcitest
             WriteBuffer[0] = (byte) '^';
             WriteBuffer[1] = 1;
             WriteBuffer[2] = 1;
-            WriteBuffer[3] = (byte)cbxMasterColor.SelectedIndex;
+            WriteBuffer[3] = 0;
             WriteBuffer[4] = 0;
             WriteBuffer[5] = (byte) '\n';
             SendData(WriteBuffer);
@@ -200,19 +222,24 @@ namespace pcitest
             WriteBuffer[0] = (byte)'^';
             WriteBuffer[1] = 1;
             WriteBuffer[2] = 2;
-            WriteBuffer[3] = (byte)cbxSlaveColor.SelectedIndex;
+            WriteBuffer[3] = 0;
             WriteBuffer[4] = 0;
             WriteBuffer[5] = (byte)'\n';
             SendData(WriteBuffer);
         }
 
-        private void btnBlock_Click(object sender, EventArgs e)
-        {
-
-        }
-
         private void btnInitAll_Click(object sender, EventArgs e)
         {
+            // Set all params
+            SetForce2Pos();
+            SetForce3Pos();
+            SetForce1Strength();
+            SetForce2Strength();
+            SetForce3Strength();
+            // Sleep for setting
+            Thread.Sleep(1000);
+
+            // Send command
             WriteBuffer[0] = (byte)'^';
             WriteBuffer[1] = 1;
             WriteBuffer[2] = 0;
@@ -233,95 +260,72 @@ namespace pcitest
             SendData(WriteBuffer);
         }
 
-        private void btnForce2Pos_Click(object sender, EventArgs e)
-        {
-            int Position;
-            if (int.TryParse(txtForce2Pos.Text, out Position))
-            {
-                WriteBuffer[0] = (byte)'^';
-                WriteBuffer[1] = 2;
-                WriteBuffer[2] = 1;
-                WriteBuffer[3] = BitConverter.GetBytes(Position)[0];
-                WriteBuffer[4] = BitConverter.GetBytes(Position)[1];
-                WriteBuffer[5] = (byte)'\n';
-                SendData(WriteBuffer);
-            }
-            else
-            {
-                MessageBox.Show("请输入正确的数值", "出现错误");
-            }
-        }
-
-        private void btnForce3Pos_Click(object sender, EventArgs e)
-        {
-            int Position;
-            if (int.TryParse(txtForce3Pos.Text, out Position))
-            {
-                WriteBuffer[0] = (byte)'^';
-                WriteBuffer[1] = 2;
-                WriteBuffer[2] = 2;
-                WriteBuffer[3] = BitConverter.GetBytes(Position)[0];
-                WriteBuffer[4] = BitConverter.GetBytes(Position)[1];
-                WriteBuffer[5] = (byte)'\n';
-                SendData(WriteBuffer);
-            }
-            else
-            {
-                MessageBox.Show("请输入正确的数值", "出现错误");
-            }
-
-        }
-
-        private void btnForce1_Click(object sender, EventArgs e)
-        {
+        private void SetForce2Pos(){
             WriteBuffer[0] = (byte)'^';
-            WriteBuffer[1] = 3;
+            WriteBuffer[1] = 2;
             WriteBuffer[2] = 1;
-            WriteBuffer[3] = (byte)(cbxForce1.SelectedIndex * 10);
-            WriteBuffer[4] = 0;
+            WriteBuffer[3] = BitConverter.GetBytes((Int16)udForce2Pos.Value)[0];
+            WriteBuffer[4] = BitConverter.GetBytes((Int16)udForce2Pos.Value)[1];
             WriteBuffer[5] = (byte)'\n';
             SendData(WriteBuffer);
         }
 
-        private void btnForce2_Click(object sender, EventArgs e)
-        {
+        private void SetForce3Pos(){
             WriteBuffer[0] = (byte)'^';
-            WriteBuffer[1] = 3;
+            WriteBuffer[1] = 2;
             WriteBuffer[2] = 2;
-            WriteBuffer[3] = (byte)(cbxForce2.SelectedIndex * 10);
-            WriteBuffer[4] = 0;
+            WriteBuffer[3] = BitConverter.GetBytes((Int16)udForce3Pos.Value)[0];
+            WriteBuffer[4] = BitConverter.GetBytes((Int16)udForce3Pos.Value)[0];
             WriteBuffer[5] = (byte)'\n';
             SendData(WriteBuffer);
         }
 
-        private void btnForce3_Click(object sender, EventArgs e)
+        private void SetForce1Strength()
         {
             WriteBuffer[0] = (byte)'^';
-            WriteBuffer[1] = 3;
-            WriteBuffer[2] = 3;
-            WriteBuffer[3] = (byte)(cbxForce3.SelectedIndex * 10);
-            WriteBuffer[4] = 0;
-            WriteBuffer[5] = (byte)'\n';
-            SendData(WriteBuffer);
-        }
-
-        private void btnMasterFine_Click(object sender, EventArgs e)
-        {
-            WriteBuffer[0] = (byte)'^';
-            WriteBuffer[1] = 4;
-            WriteBuffer[2] = 1;
-            WriteBuffer[3] = (byte)cbxMasterFine.SelectedIndex ;
-            WriteBuffer[4] = 0;
-            WriteBuffer[5] = (byte)'\n';
-            SendData(WriteBuffer);
-        }
-
-        private void btnSlaveFine_Click(object sender, EventArgs e)
-        {
-            WriteBuffer[0] = (byte)'^';
-            WriteBuffer[1] = 4;
+            WriteBuffer[1] = 2;
             WriteBuffer[2] = 2;
-            WriteBuffer[3] = (byte)cbxSlaveFine.SelectedIndex;
+            WriteBuffer[3] = BitConverter.GetBytes((Int16)udForce1Strength.Value)[0];
+            WriteBuffer[4] = BitConverter.GetBytes((Int16)udForce1Strength.Value)[0];
+            WriteBuffer[5] = (byte)'\n';
+            SendData(WriteBuffer);
+        }
+
+        private void SetForce2Strength()
+        {
+            WriteBuffer[0] = (byte)'^';
+            WriteBuffer[1] = 2;
+            WriteBuffer[2] = 2;
+            WriteBuffer[3] = BitConverter.GetBytes((Int16)udForce2Strength.Value)[0];
+            WriteBuffer[4] = BitConverter.GetBytes((Int16)udForce2Strength.Value)[0];
+            WriteBuffer[5] = (byte)'\n';
+            SendData(WriteBuffer);
+        }
+
+        private void SetForce3Strength()
+        {
+            WriteBuffer[0] = (byte)'^';
+            WriteBuffer[1] = 2;
+            WriteBuffer[2] = 2;
+            WriteBuffer[3] = BitConverter.GetBytes((Int16)udForce3Strength.Value)[0];
+            WriteBuffer[4] = BitConverter.GetBytes((Int16)udForce3Strength.Value)[0];
+            WriteBuffer[5] = (byte)'\n';
+            SendData(WriteBuffer);
+        }
+
+        private void btnInitForceStrength_Click(object sender, EventArgs e)
+        {
+            // Set Strength params
+            SetForce1Strength();
+            SetForce2Strength();
+            SetForce3Strength(); 
+            // Sleep for setting
+            Thread.Sleep(1000);
+
+            WriteBuffer[0] = (byte)'^';
+            WriteBuffer[1] = 1;
+            WriteBuffer[2] = 5;
+            WriteBuffer[3] = 0;
             WriteBuffer[4] = 0;
             WriteBuffer[5] = (byte)'\n';
             SendData(WriteBuffer);
@@ -329,13 +333,33 @@ namespace pcitest
 
         private void btnForcePos_Click(object sender, EventArgs e)
         {
-                WriteBuffer[0] = (byte)'^';
-                WriteBuffer[1] = 2;
-                WriteBuffer[2] = 3;
-                WriteBuffer[3] = 0;
-                WriteBuffer[4] = 0;
-                WriteBuffer[5] = (byte)'\n';
-                SendData(WriteBuffer);
+            // Set Pos params
+            SetForce2Pos();
+            SetForce3Pos();
+            // Sleep for setting
+            Thread.Sleep(1000);
+
+            WriteBuffer[0] = (byte)'^';
+            WriteBuffer[1] = 1;
+            WriteBuffer[2] = 4;
+            WriteBuffer[3] = 0;
+            WriteBuffer[4] = 0;
+            WriteBuffer[5] = (byte)'\n';
+            SendData(WriteBuffer);
+
         }
+
+        private void timer1_Tick(object sender, EventArgs e)
+        {
+            // send heartbeat signal to hardware
+            WriteBuffer[0] = (byte)'^';
+            WriteBuffer[1] = 3;
+            WriteBuffer[2] = 1;
+            WriteBuffer[3] = 0;
+            WriteBuffer[4] = 0;
+            WriteBuffer[5] = (byte)'\n';
+            SendData(WriteBuffer);
+        }
+
     }
 }

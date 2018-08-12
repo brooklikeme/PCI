@@ -24,7 +24,7 @@
 
 #define CONTRAST_PIN A3
 #define PRESSURE_PIN A4
-#define SWITCH_PIN 59
+#define SWITCH_PIN1 59
 #define SWITCH_PIN2 44
 
 // #define MASTER_SETTING_PIN A4 // set tracking color for master module
@@ -146,11 +146,12 @@ int readInterval = 30000;
 int initInterval = 3000;
 int pressure = 0;
 int contrast = 0;
-byte switchStatus = 0;
+byte switchStatus1 = 0;
+byte switchStatus2 = 0;
 byte readBuffer[6];
 int readBufferIndex = 0;
 byte prevSendBuffer[15];
-byte currSendBuffer[15];
+byte currSendBuffer[16];
 bool master_limit_triggered = false;
 bool slave_limit_triggered = false;
 bool force2_limit_triggered = false;
@@ -278,7 +279,8 @@ void setup(){//将步进电机用到的IO管脚设置成输出
 
   pinMode(PRESSURE_PIN, INPUT);
   pinMode(CONTRAST_PIN, INPUT);
-  pinMode(SWITCH_PIN, INPUT_PULLUP);
+  pinMode(SWITCH_PIN1, INPUT_PULLUP);
+  pinMode(SWITCH_PIN2, INPUT_PULLUP);
 
   pinMode(MASTER_LIMIT_PIN, INPUT_PULLUP);
   pinMode(SLAVE_LIMIT_PIN, INPUT_PULLUP);
@@ -726,8 +728,12 @@ int readContrast() {
   return abs(map(val, 3, 1000, 0, 12000));
 }
 
-byte readSwitchStatus() {
-  return digitalRead(SWITCH_PIN) == LOW;
+byte readSwitch1Status() {
+  return digitalRead(SWITCH_PIN1) == LOW;
+}
+
+byte readSwitch2Status(){
+  return digitalRead(SWITCH_PIN2) == LOW;  
 }
 
 void triggerEvent(char type, char param1, int param2) {
@@ -912,7 +918,8 @@ void loop(){
     // read contrast()
     contrast = readContrast();
     // read switch status
-    switchStatus = readSwitchStatus();    
+    switchStatus1 = readSwitchStatus1();    
+    switchStatus2 = readSwitchStatus2();
     // write serial
     /*
      * 起始符   3 
@@ -966,8 +973,9 @@ void loop(){
     currSendBuffer[10] = highByte(contrast);
     currSendBuffer[11] = lowByte(pressure);
     currSendBuffer[12] = highByte(pressure);
-    currSendBuffer[13] = switchStatus;
-    currSendBuffer[14] = '\n';
+    currSendBuffer[13] = switchStatus1;
+    currSendBuffer[14] = switchStatus2;
+    currSendBuffer[15] = '\n';
 
     if (memcmp(currSendBuffer, prevSendBuffer, 15) != 0) {
       Serial.write(currSendBuffer, 15);

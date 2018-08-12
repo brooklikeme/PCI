@@ -15,7 +15,7 @@ namespace pcitest
     public partial class Form1 : Form
     {
         private SerialPort ComDevice = new SerialPort();
-        byte[] ReadBuffer = new byte[15];
+        byte[] ReadBuffer = new byte[17];
         byte[] WriteBuffer = new byte[6];
         int ReadBufferIndex = 0;
 
@@ -59,25 +59,27 @@ namespace pcitest
 
                 if (status == 0)
                 {
-                    pbxStatus.BackColor = Color.Yellow;
-                    lbStatus.Text = "未初始化";
-                    return;
+                    pbxStatus.BackColor = Color.Orange;
+                    lbStatus.Text = "未就绪";
                 }
                 else if (status == 1) {
-                    pbxStatus.BackColor = Color.Orange;
-                    lbStatus.Text = "初始化中...";
-                    return;
+                    pbxStatus.BackColor = Color.Yellow;
+                    lbStatus.Text = "未初始化";
                 }
                 else if (status == 2)
+                {
+                    pbxStatus.BackColor = Color.Blue;
+                    lbStatus.Text = "初始化中...";
+                }
+                else if (status == 3)
                 {
                     pbxStatus.BackColor = Color.Green;
                     lbStatus.Text = "运行中";
                 }
                 else if (status == 255)
                 {
-                    pbxStatus.BackColor = Color.Orange;
+                    pbxStatus.BackColor = Color.Red;
                     lbStatus.Text = "参数错误";
-                    return;
                 }
 
                 if (masterPos >= 0 && (int)masterPos <= tbrMasterPos.Maximum)
@@ -124,10 +126,6 @@ namespace pcitest
                 {
                     MessageBox.Show(ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-            }
-            else
-            {
-                MessageBox.Show("串口未打开", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             return false;
         }
@@ -264,8 +262,8 @@ namespace pcitest
             WriteBuffer[0] = (byte)'^';
             WriteBuffer[1] = 2;
             WriteBuffer[2] = 1;
-            WriteBuffer[3] = BitConverter.GetBytes((Int16)udForce2Pos.Value)[0];
-            WriteBuffer[4] = BitConverter.GetBytes((Int16)udForce2Pos.Value)[1];
+            WriteBuffer[3] = BitConverter.GetBytes((Int16)6000)[0];
+            WriteBuffer[4] = BitConverter.GetBytes((Int16)6000)[1];
             WriteBuffer[5] = (byte)'\n';
             SendData(WriteBuffer);
         }
@@ -274,8 +272,8 @@ namespace pcitest
             WriteBuffer[0] = (byte)'^';
             WriteBuffer[1] = 2;
             WriteBuffer[2] = 2;
-            WriteBuffer[3] = BitConverter.GetBytes((Int16)udForce3Pos.Value)[0];
-            WriteBuffer[4] = BitConverter.GetBytes((Int16)udForce3Pos.Value)[0];
+            WriteBuffer[3] = BitConverter.GetBytes((Int16)7000)[0];
+            WriteBuffer[4] = BitConverter.GetBytes((Int16)7000)[1];
             WriteBuffer[5] = (byte)'\n';
             SendData(WriteBuffer);
         }

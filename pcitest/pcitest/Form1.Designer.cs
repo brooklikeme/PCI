@@ -391,7 +391,7 @@
             this.btnInitMaster.Name = "btnInitMaster";
             this.btnInitMaster.Size = new System.Drawing.Size(160, 43);
             this.btnInitMaster.TabIndex = 36;
-            this.btnInitMaster.Text = "主模块初始化";
+            this.btnInitMaster.Text = "主模块归位";
             this.btnInitMaster.UseVisualStyleBackColor = true;
             this.btnInitMaster.Click += new System.EventHandler(this.btnInitMaster_Click);
             // 
@@ -401,7 +401,7 @@
             this.btnInitSlave.Name = "btnInitSlave";
             this.btnInitSlave.Size = new System.Drawing.Size(160, 43);
             this.btnInitSlave.TabIndex = 38;
-            this.btnInitSlave.Text = "辅模块初始化";
+            this.btnInitSlave.Text = "辅模块归位";
             this.btnInitSlave.UseVisualStyleBackColor = true;
             this.btnInitSlave.Click += new System.EventHandler(this.btnInitSlave_Click);
             // 
@@ -411,7 +411,7 @@
             this.btnInitAll.Name = "btnInitAll";
             this.btnInitAll.Size = new System.Drawing.Size(160, 43);
             this.btnInitAll.TabIndex = 44;
-            this.btnInitAll.Text = "全部初始化";
+            this.btnInitAll.Text = "系统初始化";
             this.btnInitAll.UseVisualStyleBackColor = true;
             this.btnInitAll.Click += new System.EventHandler(this.btnInitAll_Click);
             // 
@@ -421,7 +421,7 @@
             this.btnInitForce.Name = "btnInitForce";
             this.btnInitForce.Size = new System.Drawing.Size(182, 43);
             this.btnInitForce.TabIndex = 45;
-            this.btnInitForce.Text = "加紧机构初始化";
+            this.btnInitForce.Text = "加紧机构归位";
             this.btnInitForce.UseVisualStyleBackColor = true;
             this.btnInitForce.Click += new System.EventHandler(this.btnInitForce_Click);
             // 

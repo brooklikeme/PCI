@@ -26,9 +26,7 @@
 #define PRESSURE_PIN A4
 #define SWITCH_PIN1 59
 #define SWITCH_PIN2 44
-
-// #define MASTER_SETTING_PIN A4 // set tracking color for master module
-// #define SLAVE_SETTING_PIN A5 // set tracking color for slave module
+#define HEARTBEAT_PIN 57
 
 #define MASTER_MOVE_PIN1 A9 // get master move pwm pulse
 #define MASTER_SPIN_PIN1 A10 // get master spin pwm pulse
@@ -95,8 +93,15 @@ volatile float slave_module_position = 0;
 volatile float force2_module_position = 0;
 volatile float force3_module_position = 0;
 
+int init_status = 0;
+int heartbeat_status = 1;
+
 float force2_setting_position = 0;
 float force3_setting_position = 0;
+
+int force1_setting_strength = 0;
+int force2_setting_strength = 0;
+int force3_setting_strength = 0;
 
 const int trackThreshold = 80;
 
@@ -146,12 +151,13 @@ int readInterval = 30000;
 int initInterval = 3000;
 int pressure = 0;
 int contrast = 0;
+byte machineStatus = 0;
 byte switchStatus1 = 0;
 byte switchStatus2 = 0;
 byte readBuffer[6];
 int readBufferIndex = 0;
 byte prevSendBuffer[15];
-byte currSendBuffer[16];
+byte currSendBuffer[18];
 bool master_limit_triggered = false;
 bool slave_limit_triggered = false;
 bool force2_limit_triggered = false;
@@ -281,6 +287,8 @@ void setup(){//将步进电机用到的IO管脚设置成输出
   pinMode(CONTRAST_PIN, INPUT);
   pinMode(SWITCH_PIN1, INPUT_PULLUP);
   pinMode(SWITCH_PIN2, INPUT_PULLUP);
+  pinMode(HEARTBEAT_PIN, OUTPUT);
+  digitalWrite(HEARTBEAT_PIN, HIGH);
 
   pinMode(MASTER_LIMIT_PIN, INPUT_PULLUP);
   pinMode(SLAVE_LIMIT_PIN, INPUT_PULLUP);
@@ -489,7 +497,10 @@ void initForce3() {
     if (force3_remain_steps <= 0) {
       force3_limit_triggered = false;
       force3_status = 1;
-      force3_module_position = force3_offset;      
+      force3_module_position = force3_offset;    
+      if (init_status == 1) {
+        triggerEvent(1, 4, 0);
+      }  
     }
   } else {
     if (digitalRead(FORCE_LIMIT_PIN3) == LOW) {
@@ -510,6 +521,10 @@ void moveForce2() {
   if (digitalRead(FORCE_LIMIT_PIN2) == LOW || force2_module_position >= force2_setting_position) {
     force2_remain_steps = 0;
     force2_status = 1;
+    if (init_status == 1 && force3_status == 1) {
+      triggerEvent(1, 5, 0);
+      init_status = 2;
+    }
   } else {
     force2_last_direction = 1;
     force2_remain_steps = minSteps;
@@ -521,6 +536,10 @@ void moveForce3() {
   if (digitalRead(FORCE_LIMIT_PIN3) == LOW || force3_module_position >= force3_setting_position) {
     force3_remain_steps = 0;
     force3_status = 1;
+    if (init_status == 1 && force2_status == 1) {
+      triggerEvent(1, 5, 0);
+      init_status = 2;
+    }
   } else {
     force3_last_direction = 1;
     force3_remain_steps = minSteps;
@@ -728,24 +747,25 @@ int readContrast() {
   return abs(map(val, 3, 1000, 0, 12000));
 }
 
-byte readSwitch1Status() {
+byte readSwitchStatus1() {
   return digitalRead(SWITCH_PIN1) == LOW;
 }
 
-byte readSwitch2Status(){
+byte readSwitchStatus2(){
   return digitalRead(SWITCH_PIN2) == LOW;  
 }
 
 void triggerEvent(char type, char param1, int param2) {
-  if (type == 1) {
+  if (type == 1 && heartbeat_status == 1) {
     if (param1 == 0) {
       // init all
       triggerEvent(1, 1, 0);
       triggerEvent(1, 2, 0);
       triggerEvent(1, 3, 0);
+      init_status = 1;
     } else if (param1 == 1) {
       // slow down speed
-      master_speed_rate = 3;
+      master_speed_rate = 2;
       // init master tracker
       master_limit_triggered = digitalRead(MASTER_LIMIT_PIN) == LOW;
       if (master_limit_triggered) {
@@ -759,7 +779,7 @@ void triggerEvent(char type, char param1, int param2) {
       }      
     } else if (param1 == 2) {
       // slow down speed
-      slave_speed_rate = 3;
+      slave_speed_rate = 2;
       // init slave tracker
       slave_limit_triggered = digitalRead(SLAVE_LIMIT_PIN) == LOW;
       if (slave_limit_triggered) {
@@ -772,10 +792,12 @@ void triggerEvent(char type, char param1, int param2) {
         slave_status = 0;
       }
     } else if (param1 == 3) {
-      // loose force servos
-      triggerEvent(3, 1, 0);
-      triggerEvent(3, 2, 0);
-      triggerEvent(3, 3, 0);
+      // set servo strength
+      triggerEvent(2, 3, 0);
+      triggerEvent(2, 4, 0);
+      triggerEvent(2, 5, 0);
+      // execute
+      triggerEvent(1, 5, 0);
       //wait for servo action
       delay(300);
       // init forces
@@ -788,43 +810,72 @@ void triggerEvent(char type, char param1, int param2) {
         digitalWrite(FORCE_DIR_PIN2, HIGH);
       } else {
         force2_status = 0;
-      }      
-    }
-  } else if (type == 2) {
-    // set force positions
-    if (param1 == 1) {
-      // pre set force2 position
-      force2_setting_position = param2 * 1.0 / 10;
-    } else if (param1 == 2) {
-      // pre set force3 position
-      force3_setting_position = param2 * 1.0 / 10;
-    } else if (param1 == 3) {
+      } 
+    }else if (param1 == 4) {
       // execute position setting
       // check if force2 and force3 positions are ok   
       if (force2_setting_position >= force2_offset 
         && force3_setting_position <= track_length 
-        && force3_setting_position - force2_setting_position >= force_distance) {          
-        // loose force servos
-        triggerEvent(3, 1, 0);
-        triggerEvent(3, 2, 0);
-        triggerEvent(3, 3, 0);
+        && force3_setting_position - force2_setting_position >= force_distance) {                         
+        // set servo strength
+        triggerEvent(2, 3, 0);
+        triggerEvent(2, 4, 0);
+        triggerEvent(2, 5, 0);
+        // execute
+        triggerEvent(1, 5, 0);
         //wait for servo action
         delay(300);
         //
         force2_status = 2;
-        force3_status = 2;        
-      }
+        force3_status = 2;     
+      }          
+    } else if (param1 == 5) {
+      forceServo1.write(map(force1_setting_strength, 0, 100, min_servo_pulse, max_servo_pulse));
+      forceServo2.write(map(force2_setting_strength, 0, 100, min_servo_pulse, max_servo_pulse));
+      forceServo3.write(map(force3_setting_strength, 0, 100, min_servo_pulse, max_servo_pulse));       
     }
-  } else if (type == 3) {
+  } else if (type == 2 && heartbeat_status == 1) {
+    // set force positions
     if (param1 == 1) {
-      forceServo1.write(map(param2, 0, 100, min_servo_pulse, max_servo_pulse));
-    } else if (param1 == 2) {
-      forceServo2.write(map(param2, 0, 100, min_servo_pulse, max_servo_pulse));
+      // pre set force2 position
+      force2_setting_position = param2 * 1.0 / 10;
+    } else if (param1 == 2) { 
+      // pre set force3 position
+      force3_setting_position = param2 * 1.0 / 10;
     } else if (param1 == 3) {
-      forceServo3.write(map(param2, 0, 100, min_servo_pulse, max_servo_pulse));
+      force1_setting_strength = param2;
+    } else if (param1 == 4) {
+      force2_setting_strength = param2;
+    } else if (param1 == 5) {
+      force3_setting_strength = param2;
+    }
+    
+  } else if (type == 3) {
+    // heartbeat signal
+    if (param1 == 1) {
+      // heartbeat();
     }
   }
 }
+
+/*
+int last_heartbeat_time = 0;
+int heartbeat_interval = 10000000;
+void heartbeat()
+{
+  int myTime = micros();
+  if (myTime - last_heartbeat_time > heartbeat_interval) {
+    // lose heartbeat, set machine status
+    heartbeat_status = 0;
+    init_status == 0;
+    digitalWrite(HEARTBEAT_PIN, LOW);
+  } else {
+    heartbeat_status = 1;
+    digitalWrite(HEARTBEAT_PIN, HIGH);
+  }
+  last_heartbeat_time = myTime;
+}
+*/
 
 int test_master_position = 0;
 float test_master_rotation = 0;
@@ -961,25 +1012,38 @@ void loop(){
     // Serial.println(master_position);
     slave_position = slave_position >= 0 && slave_tracing ? (int)slave_position : 0;    
     currSendBuffer[0] = '^';
-    currSendBuffer[1] = lowByte(master_position);
-    currSendBuffer[2] = highByte(master_position);
-    currSendBuffer[3] = lowByte(master_spin_value);
-    currSendBuffer[4] = highByte(master_spin_value);
-    currSendBuffer[5] = lowByte(slave_position);
-    currSendBuffer[6] = highByte(slave_position);
-    currSendBuffer[7] = lowByte(slave_spin_value);
-    currSendBuffer[8] = highByte(slave_spin_value);
-    currSendBuffer[9] = lowByte(contrast);
-    currSendBuffer[10] = highByte(contrast);
-    currSendBuffer[11] = lowByte(pressure);
-    currSendBuffer[12] = highByte(pressure);
-    currSendBuffer[13] = switchStatus1;
-    currSendBuffer[14] = switchStatus2;
-    currSendBuffer[15] = '\n';
+    if (heartbeat_status == 0) {
+      currSendBuffer[1] = 0;
+    } else {
+      if (init_status == 0) {
+        currSendBuffer[1] = 1;
+      } else if (init_status == 1) {
+        currSendBuffer[1] = 2;
+      } else if (init_status == 2) {
+        currSendBuffer[1] = 3;
+      } else {
+        currSendBuffer[1] = 255;
+      }  
+    }
+    currSendBuffer[2] = lowByte(master_position);
+    currSendBuffer[3] = highByte(master_position);
+    currSendBuffer[4] = lowByte(master_spin_value);
+    currSendBuffer[5] = highByte(master_spin_value);
+    currSendBuffer[6] = lowByte(slave_position);
+    currSendBuffer[7] = highByte(slave_position);
+    currSendBuffer[8] = lowByte(slave_spin_value);
+    currSendBuffer[9] = highByte(slave_spin_value);
+    currSendBuffer[10] = lowByte(contrast);
+    currSendBuffer[11] = highByte(contrast);
+    currSendBuffer[12] = lowByte(pressure);
+    currSendBuffer[13] = highByte(pressure);
+    currSendBuffer[14] = switchStatus1;
+    currSendBuffer[15] = switchStatus2;
+    currSendBuffer[16] = '\n';
 
-    if (memcmp(currSendBuffer, prevSendBuffer, 15) != 0) {
-      Serial.write(currSendBuffer, 15);
-      memcpy(prevSendBuffer, currSendBuffer, 15);
+    if (memcmp(currSendBuffer, prevSendBuffer, 17) != 0) {
+      Serial.write(currSendBuffer, 17);
+      memcpy(prevSendBuffer, currSendBuffer, 17);
     }
    
     // read serial

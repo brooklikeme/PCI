@@ -57,8 +57,8 @@
 #define PWM_CH5  4
 #define PWM_CH6  5
 
-volatile int prev_times[PWM_PINS];
-volatile int pwm_values[PWM_PINS];
+volatile unsigned long prev_times[PWM_PINS];
+volatile unsigned long pwm_values[PWM_PINS];
 
 const int stepperSpeed = 400;
 const int stepsPerRev = 1600;
@@ -94,7 +94,7 @@ volatile float force2_module_position = 0;
 volatile float force3_module_position = 0;
 
 int init_status = 0;
-int heartbeat_status = 1;
+int heartbeat_status = 0;
 
 float force2_setting_position = 0;
 float force3_setting_position = 0;
@@ -144,11 +144,13 @@ int slave_seeking = 0;
 int slave_seeking_times = 0;
 const int seeking_prep_times = 20;
 
-int currTime = 0;
-int prevReadTime = 0;
-int prevInitTime = 0;
-int readInterval = 30000;
-int initInterval = 3000;
+unsigned long currTime = 0;
+unsigned long prevReadTime = 0;
+unsigned long prevInitTime = 0;
+unsigned long readInterval = 30;
+unsigned long initInterval = 3;
+unsigned long last_heartbeat_time = 0;
+unsigned long heartbeat_interval = 10000;
 int pressure = 0;
 int contrast = 0;
 byte machineStatus = 0;
@@ -288,7 +290,7 @@ void setup(){//将步进电机用到的IO管脚设置成输出
   pinMode(SWITCH_PIN1, INPUT_PULLUP);
   pinMode(SWITCH_PIN2, INPUT_PULLUP);
   pinMode(HEARTBEAT_PIN, OUTPUT);
-  digitalWrite(HEARTBEAT_PIN, HIGH);
+  digitalWrite(HEARTBEAT_PIN, LOW);
 
   pinMode(MASTER_LIMIT_PIN, INPUT_PULLUP);
   pinMode(SLAVE_LIMIT_PIN, INPUT_PULLUP);
@@ -853,17 +855,14 @@ void triggerEvent(char type, char param1, int param2) {
   } else if (type == 3) {
     // heartbeat signal
     if (param1 == 1) {
-      // heartbeat();
+      heartbeat();
     }
   }
 }
 
-/*
-int last_heartbeat_time = 0;
-int heartbeat_interval = 10000000;
 void heartbeat()
 {
-  int myTime = micros();
+  unsigned long myTime = millis();
   if (myTime - last_heartbeat_time > heartbeat_interval) {
     // lose heartbeat, set machine status
     heartbeat_status = 0;
@@ -875,7 +874,6 @@ void heartbeat()
   }
   last_heartbeat_time = myTime;
 }
-*/
 
 int test_master_position = 0;
 float test_master_rotation = 0;
@@ -884,7 +882,7 @@ float test_slave_rotation = 0;
 
 void loop(){
   // read sensors at a constant speed
-  currTime = micros();
+  currTime = millis();
   
   // track visions
   if (master_status == 1) {

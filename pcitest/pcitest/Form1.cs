@@ -282,9 +282,9 @@ namespace pcitest
         {
             WriteBuffer[0] = (byte)'^';
             WriteBuffer[1] = 2;
-            WriteBuffer[2] = 2;
+            WriteBuffer[2] = 3;
             WriteBuffer[3] = BitConverter.GetBytes((Int16)udForce1Strength.Value)[0];
-            WriteBuffer[4] = BitConverter.GetBytes((Int16)udForce1Strength.Value)[0];
+            WriteBuffer[4] = BitConverter.GetBytes((Int16)udForce1Strength.Value)[1];
             WriteBuffer[5] = (byte)'\n';
             SendData(WriteBuffer);
         }
@@ -293,9 +293,9 @@ namespace pcitest
         {
             WriteBuffer[0] = (byte)'^';
             WriteBuffer[1] = 2;
-            WriteBuffer[2] = 2;
+            WriteBuffer[2] = 4;
             WriteBuffer[3] = BitConverter.GetBytes((Int16)udForce2Strength.Value)[0];
-            WriteBuffer[4] = BitConverter.GetBytes((Int16)udForce2Strength.Value)[0];
+            WriteBuffer[4] = BitConverter.GetBytes((Int16)udForce2Strength.Value)[1];
             WriteBuffer[5] = (byte)'\n';
             SendData(WriteBuffer);
         }
@@ -304,9 +304,9 @@ namespace pcitest
         {
             WriteBuffer[0] = (byte)'^';
             WriteBuffer[1] = 2;
-            WriteBuffer[2] = 2;
+            WriteBuffer[2] = 5;
             WriteBuffer[3] = BitConverter.GetBytes((Int16)udForce3Strength.Value)[0];
-            WriteBuffer[4] = BitConverter.GetBytes((Int16)udForce3Strength.Value)[0];
+            WriteBuffer[4] = BitConverter.GetBytes((Int16)udForce3Strength.Value)[1];
             WriteBuffer[5] = (byte)'\n';
             SendData(WriteBuffer);
         }
@@ -332,8 +332,8 @@ namespace pcitest
         private void btnForcePos_Click(object sender, EventArgs e)
         {
             // Set Pos params
-            SetForce2Pos();
-            SetForce3Pos();
+            // SetForce2Pos();
+            // SetForce3Pos();
             // Sleep for setting
             Thread.Sleep(1000);
 

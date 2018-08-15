@@ -393,7 +393,7 @@ void setup(){//将步进电机用到的IO管脚设置成输出
   TCCR4B = 0;// same for TCCR1B
   TCNT4  = 0;//initialize counter value to 0
   // set compare match register for 1hz increments
-  OCR4A = 16000000.0f / 3000;
+  OCR4A = 16000000.0f / 6000;
   // turn on CTC mode
   TCCR4B |= (1 << WGM12);
   // Set CS12 and CS10 bits for 1024 prescaler
@@ -496,7 +496,7 @@ void initForce2() {
 void initForce3() {
   if (force3_limit_triggered) {
     // wait for pulling back complete and set init status
-    if (force3_remain_steps <= 0) {
+    if (force3_remain_steps <= 0) {              
       force3_limit_triggered = false;
       force3_status = 1;
       force3_module_position = force3_offset;    
@@ -522,9 +522,10 @@ void initForce3() {
 void moveForce2() {
   if (digitalRead(FORCE_LIMIT_PIN2) == LOW || force2_module_position >= force2_setting_position) {
     force2_remain_steps = 0;
-    force2_status = 1;
+    force2_status = 1;    
     if (init_status == 1 && force3_status == 1) {
       triggerEvent(1, 5, 0);
+      // 
       init_status = 2;
     }
   } else {
@@ -540,6 +541,7 @@ void moveForce3() {
     force3_status = 1;
     if (init_status == 1 && force2_status == 1) {
       triggerEvent(1, 5, 0);
+      //
       init_status = 2;
     }
   } else {
@@ -757,6 +759,13 @@ byte readSwitchStatus2(){
   return digitalRead(SWITCH_PIN2) == LOW;  
 }
 
+void looseForces(){
+  forceServo1.write(map(0, 0, 100, min_servo_pulse, max_servo_pulse));
+  forceServo2.write(map(0, 0, 100, min_servo_pulse, max_servo_pulse));
+  forceServo3.write(map(0, 0, 100, min_servo_pulse, max_servo_pulse));  
+  delay(500);
+}
+
 void triggerEvent(char type, char param1, int param2) {
   if (type == 1 && heartbeat_status == 1) {
     if (param1 == 0) {
@@ -795,13 +804,7 @@ void triggerEvent(char type, char param1, int param2) {
       }
     } else if (param1 == 3) {
       // set servo strength
-      triggerEvent(2, 3, 0);
-      triggerEvent(2, 4, 0);
-      triggerEvent(2, 5, 0);
-      // execute
-      triggerEvent(1, 5, 0);
-      //wait for servo action
-      delay(300);
+      looseForces();
       // init forces
       force2_limit_triggered = digitalRead(FORCE_LIMIT_PIN2) == LOW;
       if (force2_limit_triggered) {
@@ -818,23 +821,23 @@ void triggerEvent(char type, char param1, int param2) {
       // check if force2 and force3 positions are ok   
       if (force2_setting_position >= force2_offset 
         && force3_setting_position <= track_length 
-        && force3_setting_position - force2_setting_position >= force_distance) {                         
+        && force3_setting_position - force2_setting_position >= force_distance) {                          
         // set servo strength
-        triggerEvent(2, 3, 0);
-        triggerEvent(2, 4, 0);
-        triggerEvent(2, 5, 0);
-        // execute
-        triggerEvent(1, 5, 0);
-        //wait for servo action
-        delay(300);
+        looseForces();
         //
         force2_status = 2;
         force3_status = 2;     
       }          
     } else if (param1 == 5) {
-      forceServo1.write(map(force1_setting_strength, 0, 100, min_servo_pulse, max_servo_pulse));
-      forceServo2.write(map(force2_setting_strength, 0, 100, min_servo_pulse, max_servo_pulse));
-      forceServo3.write(map(force3_setting_strength, 0, 100, min_servo_pulse, max_servo_pulse));       
+      if ((force1_setting_strength >=0 && force1_setting_strength <= 100)
+        && (force2_setting_strength >=0 && force2_setting_strength <= 100)
+        && (force3_setting_strength >=0 && force3_setting_strength <= 100)) {
+          forceServo1.write(map(force1_setting_strength, 0, 100, min_servo_pulse, max_servo_pulse));
+          forceServo2.write(map(force2_setting_strength, 0, 100, min_servo_pulse, max_servo_pulse));
+          forceServo3.write(map(force3_setting_strength, 0, 100, min_servo_pulse, max_servo_pulse));    
+          // wait for servo action
+          delay(500);            
+        } 
     }
   } else if (type == 2 && heartbeat_status == 1) {
     // set force positions
@@ -855,24 +858,22 @@ void triggerEvent(char type, char param1, int param2) {
   } else if (type == 3) {
     // heartbeat signal
     if (param1 == 1) {
-      heartbeat();
+      last_heartbeat_time = millis();
     }
   }
 }
 
-void heartbeat()
+void check_heartbeat()
 {
-  unsigned long myTime = millis();
-  if (myTime - last_heartbeat_time > heartbeat_interval) {
+  if (last_heartbeat_time == 0 || (millis() - last_heartbeat_time > heartbeat_interval)) {
     // lose heartbeat, set machine status
     heartbeat_status = 0;
-    init_status == 0;
+    init_status = 0;
     digitalWrite(HEARTBEAT_PIN, LOW);
   } else {
     heartbeat_status = 1;
     digitalWrite(HEARTBEAT_PIN, HIGH);
   }
-  last_heartbeat_time = myTime;
 }
 
 int test_master_position = 0;
@@ -1059,6 +1060,9 @@ void loop(){
       }
       readBufferIndex ++;
     }
+
+    // check heartbeat
+    check_heartbeat();
     
     // update prev read time
     

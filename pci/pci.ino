@@ -26,7 +26,7 @@
 #define PRESSURE_PIN A4
 #define SWITCH_PIN1 59
 #define SWITCH_PIN2 44
-#define HEARTBEAT_PIN 57
+#define HEARTBEAT_PIN 32
 
 #define MASTER_MOVE_PIN1 A9 // get master move pwm pulse
 #define MASTER_SPIN_PIN1 A10 // get master spin pwm pulse
@@ -597,6 +597,7 @@ void trackMaster(int input) {
 
   //
   if (input < -156 && !forwardLimit && master_tracing) {
+    master_speed_rate = 1;
     if (!master_seeking) {
       master_seeking_times ++;
       if (master_seeking_times >= seeking_prep_times) {
@@ -611,9 +612,10 @@ void trackMaster(int input) {
           digitalWrite(MASTER_DIR_PIN, HIGH);     
     }
     if (master_remain_steps < 100) {
-        master_remain_steps = 800;         
+        master_remain_steps = 500;         
     }
   } else if (input > 150 && !backwardLimit && master_tracing){
+    master_speed_rate = 1;
     if (!master_seeking) {
       master_seeking_times ++;
       if (master_seeking_times >= seeking_prep_times) {
@@ -628,7 +630,7 @@ void trackMaster(int input) {
           digitalWrite(MASTER_DIR_PIN, LOW);     
     }
     if (master_remain_steps < 100) {
-        master_remain_steps = 800;        
+        master_remain_steps = 500;        
     }
   } else if (input >= -150 && input <= 150) {
     master_seeking = 0;
@@ -647,6 +649,7 @@ void trackMaster(int input) {
         master_last_direction = 1;
         digitalWrite(MASTER_DIR_PIN, HIGH);
       }
+      master_speed_rate = 2;
       master_remain_steps = minSteps;
     } else if (input > trackThreshold && !backwardLimit) {
       // track backward
@@ -654,6 +657,7 @@ void trackMaster(int input) {
         master_last_direction = 0;
         digitalWrite(MASTER_DIR_PIN, LOW);
       }
+      master_speed_rate = 2;
       master_remain_steps = minSteps;        
     }
   }  
@@ -677,6 +681,7 @@ void trackSlave(int input) {
 
   //
   if (input < -150 && !backwardLimit && slave_tracing) {
+    slave_speed_rate = 1;
     if (!slave_seeking) {
       slave_seeking_times ++;
       if (slave_seeking_times >= seeking_prep_times) {
@@ -692,9 +697,10 @@ void trackSlave(int input) {
         digitalWrite(SLAVE_DIR_PIN, HIGH);     
     }
     if (slave_remain_steps < 100) {
-        slave_remain_steps = 800;         
+        slave_remain_steps = 500;         
     }
   } else if (input > 150 && !forwardLimit && slave_tracing){
+    slave_speed_rate = 1;
     if (!slave_seeking) {
       slave_seeking_times ++;
       if (slave_seeking_times >= seeking_prep_times) {
@@ -709,7 +715,7 @@ void trackSlave(int input) {
         digitalWrite(SLAVE_DIR_PIN, LOW);     
     }
     if (slave_remain_steps < 100) {
-        slave_remain_steps = 800;        
+        slave_remain_steps = 500;        
     }
   } else if (input >= -150 && input <= 150) {
     slave_seeking = 0;
@@ -728,6 +734,7 @@ void trackSlave(int input) {
         slave_last_direction = 1;
         digitalWrite(SLAVE_DIR_PIN, HIGH);
       }
+      slave_speed_rate = 2;
       slave_remain_steps = minSteps;
     } else if (input > trackThreshold && !forwardLimit) {
       // track forward
@@ -735,6 +742,7 @@ void trackSlave(int input) {
         slave_last_direction = 0;
         digitalWrite(SLAVE_DIR_PIN, LOW);
       }
+      slave_speed_rate = 2;
       slave_remain_steps = minSteps;        
     }
   }     

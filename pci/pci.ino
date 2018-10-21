@@ -72,8 +72,8 @@ const int track_offset = 74;
 const int force2_offset = 126;
 const int force_distance = 18;
 const int force3_offset = force2_offset + force_distance;
-const int min_master_forward_offset = 10;
-const int min_slave_forward_offset = 10;
+const int min_master_forward_offset = 30;
+const int min_slave_forward_offset = 30;
 int minSteps = 40;// stepsPerRev / (distancePerRev * 2);
 volatile int master_remain_steps = 0;
 volatile int slave_remain_steps = 0;
@@ -107,7 +107,7 @@ const int trackThreshold = 80;
 
 // servo constants
 const int min_servo_pulse = 1120;
-const int max_servo_pulse = 1750; 
+const int max_servo_pulse = 2000; 
 
 volatile boolean master_toggle = 1;
 volatile int master_speed_rate = 1;
@@ -592,7 +592,7 @@ void trackMaster(int input) {
   } else if ((master_module_position > force2_module_position - min_master_forward_offset  || digitalRead(MASTER_LIMIT_PIN) == LOW) && master_last_direction) {
     forwardLimit = true;
     master_seeking = 0;
-    master_remain_steps = 0;
+    master_remain_steps = 0;     
   }
 
   //
@@ -613,7 +613,7 @@ void trackMaster(int input) {
     }
     if (master_remain_steps < 100) {
         master_remain_steps = 500;         
-    }
+    }      
   } else if (input > 150 && !backwardLimit && master_tracing){
     master_speed_rate = 1;
     if (!master_seeking) {
@@ -649,7 +649,7 @@ void trackMaster(int input) {
         master_last_direction = 1;
         digitalWrite(MASTER_DIR_PIN, HIGH);
       }
-      master_speed_rate = 2;
+      // master_speed_rate = 1;
       master_remain_steps = minSteps;
     } else if (input > trackThreshold && !backwardLimit) {
       // track backward
@@ -657,7 +657,8 @@ void trackMaster(int input) {
         master_last_direction = 0;
         digitalWrite(MASTER_DIR_PIN, LOW);
       }
-      master_speed_rate = 2;
+      // master_speed_rate = 2;
+      master_speed_rate = 1;
       master_remain_steps = minSteps;        
     }
   }  
@@ -734,7 +735,8 @@ void trackSlave(int input) {
         slave_last_direction = 1;
         digitalWrite(SLAVE_DIR_PIN, HIGH);
       }
-      slave_speed_rate = 2;
+      // slave_speed_rate = 2;
+      slave_speed_rate = 1;
       slave_remain_steps = minSteps;
     } else if (input > trackThreshold && !forwardLimit) {
       // track forward
@@ -742,7 +744,8 @@ void trackSlave(int input) {
         slave_last_direction = 0;
         digitalWrite(SLAVE_DIR_PIN, LOW);
       }
-      slave_speed_rate = 2;
+      // slave_speed_rate = 2;
+      slave_speed_rate = 1;
       slave_remain_steps = minSteps;        
     }
   }     
@@ -784,7 +787,8 @@ void triggerEvent(char type, char param1, int param2) {
       init_status = 1;
     } else if (param1 == 1) {
       // slow down speed
-      master_speed_rate = 2;
+      master_speed_rate = 1;
+      // master_speed_rate = 2;
       // init master tracker
       master_limit_triggered = digitalRead(MASTER_LIMIT_PIN) == LOW;
       if (master_limit_triggered) {
@@ -798,7 +802,8 @@ void triggerEvent(char type, char param1, int param2) {
       }      
     } else if (param1 == 2) {
       // slow down speed
-      slave_speed_rate = 2;
+      // slave_speed_rate = 2;
+      slave_speed_rate = 1;
       // init slave tracker
       slave_limit_triggered = digitalRead(SLAVE_LIMIT_PIN) == LOW;
       if (slave_limit_triggered) {

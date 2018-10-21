@@ -269,7 +269,7 @@
             // 
             this.tbrSlaveAngle.BackColor = System.Drawing.SystemColors.Control;
             this.tbrSlaveAngle.Location = new System.Drawing.Point(1151, 593);
-            this.tbrSlaveAngle.Maximum = 3600;
+            this.tbrSlaveAngle.Maximum = 360;
             this.tbrSlaveAngle.Name = "tbrSlaveAngle";
             this.tbrSlaveAngle.RightToLeft = System.Windows.Forms.RightToLeft.Yes;
             this.tbrSlaveAngle.Size = new System.Drawing.Size(436, 90);

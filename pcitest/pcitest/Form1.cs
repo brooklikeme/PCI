@@ -262,8 +262,8 @@ namespace pcitest
             WriteBuffer[0] = (byte)'^';
             WriteBuffer[1] = 2;
             WriteBuffer[2] = 1;
-            WriteBuffer[3] = BitConverter.GetBytes((Int16)6000)[0];
-            WriteBuffer[4] = BitConverter.GetBytes((Int16)6000)[1];
+            WriteBuffer[3] = BitConverter.GetBytes((Int16)udForce2Pos.Value)[0];
+            WriteBuffer[4] = BitConverter.GetBytes((Int16)udForce2Pos.Value)[1];
             WriteBuffer[5] = (byte)'\n';
             SendData(WriteBuffer);
         }
@@ -272,8 +272,8 @@ namespace pcitest
             WriteBuffer[0] = (byte)'^';
             WriteBuffer[1] = 2;
             WriteBuffer[2] = 2;
-            WriteBuffer[3] = BitConverter.GetBytes((Int16)7000)[0];
-            WriteBuffer[4] = BitConverter.GetBytes((Int16)7000)[1];
+            WriteBuffer[3] = BitConverter.GetBytes((Int16)udForce3Pos.Value)[0];
+            WriteBuffer[4] = BitConverter.GetBytes((Int16)udForce3Pos.Value)[1];
             WriteBuffer[5] = (byte)'\n';
             SendData(WriteBuffer);
         }

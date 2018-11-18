@@ -882,6 +882,7 @@ void check_heartbeat()
     // lose heartbeat, set machine status
     heartbeat_status = 0;
     init_status = 0;
+    looseForces();
     digitalWrite(HEARTBEAT_PIN, LOW);
   } else {
     heartbeat_status = 1;

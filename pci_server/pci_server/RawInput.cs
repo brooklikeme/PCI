@@ -7,9 +7,85 @@ using System.Collections;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using Microsoft.Win32;
+using System.Configuration;
+using System.Collections.Specialized;
 
 namespace pci_server
 {
+    static class PCIConfig
+    {
+        private static Dictionary<string, string> _baseConfig = new Dictionary<string, string>();
+
+        public static Dictionary<string, string> BaseConfig
+        {
+            get { return _baseConfig; }
+            set { _baseConfig = value; }
+        }
+
+        private static Dictionary<string, string> _newBaseConfig = new Dictionary<string, string>();
+
+        public static Dictionary<string, string> NewBaseConfig
+        {
+            get { return _newBaseConfig; }
+            set { _newBaseConfig = value; }
+        }
+
+        public static void LoadBaseConfig()
+        {
+            _baseConfig.Clear();
+            _newBaseConfig.Clear();
+            foreach (var key in ConfigurationManager.AppSettings.AllKeys)
+            {
+                _baseConfig.Add(key, ConfigurationManager.AppSettings[key]);
+                _newBaseConfig.Add(key, ConfigurationManager.AppSettings[key]);
+            }
+        }
+
+        public static void SaveBaseConfig()
+        {
+            try
+            {
+                var configFile = ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.None);
+                var settings = configFile.AppSettings.Settings;
+                foreach (KeyValuePair<string, string> entry in _newBaseConfig)
+                {
+                    if (settings[entry.Key] == null)
+                    {
+                        settings.Add(entry.Key, entry.Value);
+                    }
+                    else
+                    {
+                        settings[entry.Key].Value = entry.Value;
+                    }
+                }
+                configFile.AppSettings.SectionInformation.ForceSave = true;
+                configFile.Save(ConfigurationSaveMode.Full);
+                // reload config
+                LoadBaseConfig();
+            }
+            catch (ConfigurationErrorsException)
+            {
+                MessageBox.Show("保存基础设置错误！");
+            }
+        }
+
+        public static bool CompareBaseConfig()
+        {
+            return _baseConfig.Count == _newBaseConfig.Count && !_baseConfig.Except(_newBaseConfig).Any(); ;
+        }
+
+        public static bool CompareAndSaveBaseConfig()
+        {
+            if (!CompareBaseConfig())
+            {
+                SaveBaseConfig();
+                return false;
+            }
+            return true;
+        }
+
+    }
+
     static class Global
     {
         private static RawInput _mouseInput;
@@ -197,9 +273,12 @@ namespace pci_server
             public string deviceType;
             public IntPtr deviceHandle;
             public string identity;
-            public string source;
             public long lastX;
             public long lastY;
+            public long cumulativeX;
+            public long cumulativeY;
+            public int index;
+            public int probeIndex;
         }
 
         #endregion structs & enums
@@ -228,6 +307,12 @@ namespace pci_server
         /// Value: the device info class
         /// </summary>
         private Hashtable deviceList = new Hashtable();
+        private List<string> deviceIdentityList = new List<string>(); 
+
+        public List<string> DeviceIdentityList
+        {
+            get { return deviceIdentityList; }
+        }
 
         //Event and delegate
         public delegate void DeviceEventHandler(object sender, MouseMoveEventArgs e);
@@ -296,7 +381,7 @@ namespace pci_server
 
         #endregion RawInput( IntPtr hwnd )
 
-        #region ReadReg( string item, ref bool isKeyboard )
+        #region ReadIdentity( string item )
 
         /// <summary>
         /// Reads the Registry to retrieve a friendly description
@@ -305,9 +390,10 @@ namespace pci_server
         /// <param name="item">The device name to search for, as provided by GetRawInputDeviceInfo.</param>
         /// <param name="isKeyboard">Determines whether the device's class is "Keyboard". By reference.</param>
         /// <returns>The device description stored in the Registry entry's DeviceDesc value.</returns>
-        private static string ReadReg(string item, ref bool isKeyboard)
+        private static string ReadIdentity(string item)
         {
             // Example Device Identification string
+            //\\?\HID#VID_203A&PID_FFFC&MI_00#7&37099d97&0&0000#{378de44c-56ef-11d1-bc8c-00a0c91405dd}
             // @"\??\ACPI#PNP0303#3&13c0b0c5&0#{884b96c3-56ef-11d1-bc8c-00a0c91405dd}";
 
             // remove the \??\
@@ -315,38 +401,16 @@ namespace pci_server
 
             string[] split = item.Split('#');
 
-            string id_01 = split[0];    // ACPI (Class code)
-            string id_02 = split[1];    // PNP0303 (SubClass code)
-            string id_03 = split[2];    // 3&13c0b0c5&0 (Protocol code)
-            //The final part is the class GUID and is not needed here
+            string id_01 = split[0];    // HID (Class code)
+            string id_02 = split[1];    // VID_203A&PID_FFFC&MI_00 (SubClass code)
+            string id_03 = split[2];    // 7&37099d97&0&0000 (Protocol code)
 
-            //Open the appropriate key as read-only so no permissions
-            //are needed.
-            RegistryKey OurKey = Registry.LocalMachine;
-
-            string findme = string.Format(@"System\CurrentControlSet\Enum\{0}\{1}\{2}", id_01, id_02, id_03);
-
-            OurKey = OurKey.OpenSubKey(findme, false);
-
-            //Retrieve the desired information and set isKeyboard
-            string deviceDesc = (string)OurKey.GetValue("DeviceDesc");
-            string deviceClass = (string)OurKey.GetValue("Class");
-
-            if (deviceClass.ToUpper().Equals("KEYBOARD"))
-            {
-                isKeyboard = true;
-            }
-            else
-            {
-                isKeyboard = false;
-            }
-            return deviceDesc;
+            return id_03.Replace("&", "");
         }
 
-        #endregion ReadReg( string item, ref bool isKeyboard )
+        #endregion ReadIIdentity( string item )
 
         #region int EnumerateDevices()
-
         /// <summary>
         /// Iterates through the list provided by GetRawInputDeviceList,
         /// counting keyboard devices and adding them to deviceList.
@@ -395,24 +459,19 @@ namespace pci_server
                         {
                             DeviceInfo dInfo = new DeviceInfo();
 
-                            dInfo.deviceName = Marshal.PtrToStringAnsi(pData);
+                            dInfo.deviceName = deviceName;
                             dInfo.deviceHandle = rid.hDevice;
                             dInfo.deviceType = GetDeviceType(rid.dwType);
 
-                            //Check the Registry to see whether this is actually a 
-                            //keyboard.
-                            // bool IsKeyboardDevice = false;
+                            dInfo.identity = ReadIdentity(deviceName);
 
-                            // string DeviceDesc = ReadReg(deviceName, ref IsKeyboardDevice);
-                            // dInfo.Name = DeviceDesc;
-
-                            //If it is a keyboard and it isn't already in the list,
-                            //add it to the deviceList hashtable and increase the
                             //NumberOfDevices count
                             if (!deviceList.Contains(rid.hDevice))
                             {
-                                NumberOfDevices++;
+                                dInfo.index = NumberOfDevices;
                                 deviceList.Add(rid.hDevice, dInfo);
+                                deviceIdentityList.Add(dInfo.identity);
+                                NumberOfDevices++;
                             }
                         }
                         Marshal.FreeHGlobal(pData);
@@ -479,6 +538,8 @@ namespace pci_server
 
                             dInfo.lastX = raw.mouse.lLastX;
                             dInfo.lastY = raw.mouse.lLastY;
+                            dInfo.cumulativeX += dInfo.lastX;
+                            dInfo.cumulativeY += dInfo.lastY;
                         }
 
                         if (MouseMoved != null && dInfo != null)
@@ -569,5 +630,51 @@ namespace pci_server
         }
 
         #endregion GetDeviceType( int device )
+
+        public void ZeroCumulativeX(int probeIndex)
+        {
+            foreach (DictionaryEntry entry in deviceList)
+            {
+                DeviceInfo dInfo = (DeviceInfo)entry.Value;
+                if (dInfo.probeIndex == probeIndex)
+                {
+                    dInfo.cumulativeX = 0;
+                }
+            }
+        }
+
+        public void ZeroCumulativeY(int probeIndex)
+        {
+            foreach (DictionaryEntry entry in deviceList)
+            {
+                DeviceInfo dInfo = (DeviceInfo)entry.Value;
+                if (dInfo.probeIndex == probeIndex)
+                {
+                    dInfo.cumulativeY = 0;
+                }
+            }
+        }
+
+        public void UpdateProbeIndexes()
+        {
+            foreach (DictionaryEntry entry in deviceList)
+            {
+                DeviceInfo dInfo = (DeviceInfo)entry.Value;
+                if (PCIConfig.BaseConfig.ContainsKey("Probe1") && PCIConfig.BaseConfig["Probe1"] == dInfo.identity)
+                {
+                    dInfo.probeIndex = 1;
+                }
+                else if (PCIConfig.BaseConfig.ContainsKey("Probe2") && PCIConfig.BaseConfig["Probe2"] == dInfo.identity)
+                {
+                    dInfo.probeIndex = 2;
+                }
+                else if (PCIConfig.BaseConfig.ContainsKey("Probe3") && PCIConfig.BaseConfig["Probe3"] == dInfo.identity)
+                {
+                    dInfo.probeIndex = 3;
+                }
+            }
+        }
+
+
     }
 }

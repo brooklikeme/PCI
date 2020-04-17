@@ -58,9 +58,6 @@
             this.txtTravelSignal5 = new System.Windows.Forms.TextBox();
             this.txtDeviceIdentity5 = new System.Windows.Forms.TextBox();
             this.cbxSetProbe5 = new System.Windows.Forms.ComboBox();
-            this.txt1 = new System.Windows.Forms.TextBox();
-            this.txtY = new System.Windows.Forms.TextBox();
-            this.txtX = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -71,6 +68,7 @@
             this.btnCancel.TabIndex = 2;
             this.btnCancel.Text = "取消";
             this.btnCancel.UseVisualStyleBackColor = true;
+            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
             // btnOK
             // 
@@ -80,9 +78,11 @@
             this.btnOK.TabIndex = 3;
             this.btnOK.Text = "确定";
             this.btnOK.UseVisualStyleBackColor = true;
+            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
             // btnApply
             // 
+            this.btnApply.Enabled = false;
             this.btnApply.Location = new System.Drawing.Point(1090, 672);
             this.btnApply.Name = "btnApply";
             this.btnApply.Size = new System.Drawing.Size(172, 55);
@@ -111,14 +111,19 @@
             // 
             // cbxSerialPorts
             // 
+            this.cbxSerialPorts.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbxSerialPorts.FormattingEnabled = true;
+            this.cbxSerialPorts.Items.AddRange(new object[] {
+            "<未设置>"});
             this.cbxSerialPorts.Location = new System.Drawing.Point(174, 49);
             this.cbxSerialPorts.Name = "cbxSerialPorts";
             this.cbxSerialPorts.Size = new System.Drawing.Size(200, 33);
             this.cbxSerialPorts.TabIndex = 7;
+            this.cbxSerialPorts.SelectionChangeCommitted += new System.EventHandler(this.cbxSerialPorts_SelectionChangeCommitted);
             // 
             // cbxSetProbe1
             // 
+            this.cbxSetProbe1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbxSetProbe1.FormattingEnabled = true;
             this.cbxSetProbe1.Items.AddRange(new object[] {
             "<未设置>",
@@ -129,6 +134,7 @@
             this.cbxSetProbe1.Name = "cbxSetProbe1";
             this.cbxSetProbe1.Size = new System.Drawing.Size(222, 33);
             this.cbxSetProbe1.TabIndex = 9;
+            this.cbxSetProbe1.SelectionChangeCommitted += new System.EventHandler(this.cbxSetProbe1_SelectionChangeCommitted);
             // 
             // lbDeviceIdentity
             // 
@@ -216,6 +222,7 @@
             // 
             // cbxSetProbe2
             // 
+            this.cbxSetProbe2.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbxSetProbe2.FormattingEnabled = true;
             this.cbxSetProbe2.Items.AddRange(new object[] {
             "<未设置>",
@@ -226,6 +233,7 @@
             this.cbxSetProbe2.Name = "cbxSetProbe2";
             this.cbxSetProbe2.Size = new System.Drawing.Size(222, 33);
             this.cbxSetProbe2.TabIndex = 17;
+            this.cbxSetProbe2.SelectionChangeCommitted += new System.EventHandler(this.cbxSetProbe2_SelectionChangeCommitted);
             // 
             // txtRotationSignal3
             // 
@@ -253,6 +261,7 @@
             // 
             // cbxSetProbe3
             // 
+            this.cbxSetProbe3.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbxSetProbe3.FormattingEnabled = true;
             this.cbxSetProbe3.Items.AddRange(new object[] {
             "<未设置>",
@@ -263,6 +272,7 @@
             this.cbxSetProbe3.Name = "cbxSetProbe3";
             this.cbxSetProbe3.Size = new System.Drawing.Size(222, 33);
             this.cbxSetProbe3.TabIndex = 21;
+            this.cbxSetProbe3.SelectionChangeCommitted += new System.EventHandler(this.cbxSetProbe3_SelectionChangeCommitted);
             // 
             // txtRotationSignal4
             // 
@@ -290,6 +300,7 @@
             // 
             // cbxSetProbe4
             // 
+            this.cbxSetProbe4.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbxSetProbe4.FormattingEnabled = true;
             this.cbxSetProbe4.Items.AddRange(new object[] {
             "<未设置>",
@@ -300,6 +311,7 @@
             this.cbxSetProbe4.Name = "cbxSetProbe4";
             this.cbxSetProbe4.Size = new System.Drawing.Size(222, 33);
             this.cbxSetProbe4.TabIndex = 25;
+            this.cbxSetProbe4.SelectionChangeCommitted += new System.EventHandler(this.cbxSetProbe4_SelectionChangeCommitted);
             // 
             // txtRotationSignal5
             // 
@@ -327,6 +339,7 @@
             // 
             // cbxSetProbe5
             // 
+            this.cbxSetProbe5.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.cbxSetProbe5.FormattingEnabled = true;
             this.cbxSetProbe5.Items.AddRange(new object[] {
             "<未设置>",
@@ -337,36 +350,13 @@
             this.cbxSetProbe5.Name = "cbxSetProbe5";
             this.cbxSetProbe5.Size = new System.Drawing.Size(222, 33);
             this.cbxSetProbe5.TabIndex = 29;
-            // 
-            // txt1
-            // 
-            this.txt1.Location = new System.Drawing.Point(318, 600);
-            this.txt1.Name = "txt1";
-            this.txt1.Size = new System.Drawing.Size(304, 31);
-            this.txt1.TabIndex = 35;
-            // 
-            // txtY
-            // 
-            this.txtY.Location = new System.Drawing.Point(554, 556);
-            this.txtY.Name = "txtY";
-            this.txtY.Size = new System.Drawing.Size(196, 31);
-            this.txtY.TabIndex = 34;
-            // 
-            // txtX
-            // 
-            this.txtX.Location = new System.Drawing.Point(318, 556);
-            this.txtX.Name = "txtX";
-            this.txtX.Size = new System.Drawing.Size(196, 31);
-            this.txtX.TabIndex = 33;
+            this.cbxSetProbe5.SelectionChangeCommitted += new System.EventHandler(this.cbxSetProbe5_SelectionChangeCommitted);
             // 
             // ConfigForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1309, 759);
-            this.Controls.Add(this.txt1);
-            this.Controls.Add(this.txtY);
-            this.Controls.Add(this.txtX);
             this.Controls.Add(this.txtRotationSignal5);
             this.Controls.Add(this.txtTravelSignal5);
             this.Controls.Add(this.txtDeviceIdentity5);
@@ -438,8 +428,5 @@
         private System.Windows.Forms.TextBox txtTravelSignal5;
         private System.Windows.Forms.TextBox txtDeviceIdentity5;
         private System.Windows.Forms.ComboBox cbxSetProbe5;
-        private System.Windows.Forms.TextBox txt1;
-        private System.Windows.Forms.TextBox txtY;
-        private System.Windows.Forms.TextBox txtX;
     }
 }

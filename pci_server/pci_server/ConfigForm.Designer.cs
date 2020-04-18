@@ -99,6 +99,7 @@
             this.btnAdvancedConfig.TabIndex = 5;
             this.btnAdvancedConfig.Text = "高级设置";
             this.btnAdvancedConfig.UseVisualStyleBackColor = true;
+            this.btnAdvancedConfig.Click += new System.EventHandler(this.btnAdvancedConfig_Click);
             // 
             // label1
             // 

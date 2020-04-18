@@ -171,27 +171,69 @@ namespace pci_server
 
         private void cbxSetProbe1_SelectionChangeCommitted(object sender, EventArgs e)
         {
+            for (int i = 0; i < 5; i++)
+            {
+                if (i != 0 && setProbeComboBoxList[i].SelectedIndex == cbxSetProbe1.SelectedIndex)
+                {
+                    setProbeComboBoxList[i].SelectedIndex = 0;
+                }
+            }
             CheckBaseConfigChanged();
         }
 
         private void cbxSetProbe2_SelectionChangeCommitted(object sender, EventArgs e)
         {
+            for (int i = 0; i < 5; i++)
+            {
+                if (i != 1 && setProbeComboBoxList[i].SelectedIndex == cbxSetProbe2.SelectedIndex)
+                {
+                    setProbeComboBoxList[i].SelectedIndex = 0;
+                }
+            }
             CheckBaseConfigChanged();
         }
 
         private void cbxSetProbe3_SelectionChangeCommitted(object sender, EventArgs e)
         {
+            for (int i = 0; i < 5; i++)
+            {
+                if (i != 2 && setProbeComboBoxList[i].SelectedIndex == cbxSetProbe3.SelectedIndex)
+                {
+                    setProbeComboBoxList[i].SelectedIndex = 0;
+                }
+            }
             CheckBaseConfigChanged();
         }
 
         private void cbxSetProbe4_SelectionChangeCommitted(object sender, EventArgs e)
         {
+            for (int i = 0; i < 5; i++)
+            {
+                if (i != 3 && setProbeComboBoxList[i].SelectedIndex == cbxSetProbe4.SelectedIndex)
+                {
+                    setProbeComboBoxList[i].SelectedIndex = 0;
+                }
+            }
             CheckBaseConfigChanged();
         }
 
         private void cbxSetProbe5_SelectionChangeCommitted(object sender, EventArgs e)
         {
+            for (int i = 0; i < 5; i++)
+            {
+                if (i != 4 && setProbeComboBoxList[i].SelectedIndex == cbxSetProbe5.SelectedIndex)
+                {
+                    setProbeComboBoxList[i].SelectedIndex = 0;
+                }
+            }
             CheckBaseConfigChanged();
+        }
+
+        private void btnAdvancedConfig_Click(object sender, EventArgs e)
+        {
+            AdvConfgForm frmAdvConfig = new AdvConfgForm();
+            frmAdvConfig.ShowDialog(this);
+            frmAdvConfig.Dispose();
         }
 
     }

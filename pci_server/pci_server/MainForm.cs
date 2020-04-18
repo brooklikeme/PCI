@@ -15,6 +15,7 @@ namespace pci_server
     public partial class MainForm : Form
     {
         int NumberOfMouses;
+        bool IsActive = false;
         List<Label> travelLabelList = new List<Label>();
         List<Label> rotationLabelList = new List<Label>();
         List<TrackBar> travelBarList = new List<TrackBar>();
@@ -27,7 +28,7 @@ namespace pci_server
 
         private void m_MouseMoved(object sender, RawInput.MouseMoveEventArgs e)
         {
-            if (e.Mouse.probeIndex > 0 && e.Mouse.probeIndex < 4)
+            if (IsActive && e.Mouse.probeIndex > 0 && e.Mouse.probeIndex < 4)
             {
                 travelLabelList[e.Mouse.probeIndex - 1].Text = "位置 -- " + e.Mouse.cumulativeY.ToString();
                 rotationLabelList[e.Mouse.probeIndex - 1].Text =  "角度 -- " + e.Mouse.cumulativeX.ToString();
@@ -55,15 +56,7 @@ namespace pci_server
         private void btnConfig_Click(object sender, EventArgs e)
         {
             ConfigForm frmConfig = new ConfigForm();
-            // mouseInput.MouseMoved += new RawInput.DeviceEventHandler(frmConfig.m_MouseMoved);
-            // Show testDialog as a modal dialog and determine if DialogResult = OK.
-            if (frmConfig.ShowDialog(this) == DialogResult.OK)
-            {
-                // Read the contents of testDialog's TextBox.
-                // this.txtResult.Text = testDialog.TextBox1.Text;
-            } else {
-                // this.txtResult.Text = "Cancelled";
-            }
+            frmConfig.ShowDialog(this);
             frmConfig.Dispose();
         }
 
@@ -126,6 +119,16 @@ namespace pci_server
         private void btnZeroRotation3_Click(object sender, EventArgs e)
         {
             Global.MouseInput.ZeroCumulativeX(3);
+        }
+
+        private void MainForm_Activated(object sender, EventArgs e)
+        {
+            IsActive = true;
+        }
+
+        private void MainForm_Deactivate(object sender, EventArgs e)
+        {
+            IsActive = false;
         }
     }
 }

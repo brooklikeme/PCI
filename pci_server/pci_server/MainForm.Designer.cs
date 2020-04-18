@@ -241,7 +241,7 @@
             // cbxForce1
             // 
             this.cbxForce1.FormattingEnabled = true;
-            this.cbxForce1.Location = new System.Drawing.Point(1040, 145);
+            this.cbxForce1.Location = new System.Drawing.Point(1040, 148);
             this.cbxForce1.Name = "cbxForce1";
             this.cbxForce1.Size = new System.Drawing.Size(121, 33);
             this.cbxForce1.TabIndex = 38;
@@ -275,7 +275,7 @@
             // 
             // btnSetForce2
             // 
-            this.btnSetForce2.Location = new System.Drawing.Point(1167, 261);
+            this.btnSetForce2.Location = new System.Drawing.Point(1167, 260);
             this.btnSetForce2.Name = "btnSetForce2";
             this.btnSetForce2.Size = new System.Drawing.Size(103, 45);
             this.btnSetForce2.TabIndex = 49;
@@ -363,7 +363,7 @@
             // 
             // btnSetForce3
             // 
-            this.btnSetForce3.Location = new System.Drawing.Point(1167, 388);
+            this.btnSetForce3.Location = new System.Drawing.Point(1167, 387);
             this.btnSetForce3.Name = "btnSetForce3";
             this.btnSetForce3.Size = new System.Drawing.Size(103, 45);
             this.btnSetForce3.TabIndex = 59;
@@ -612,6 +612,8 @@
             this.Controls.Add(this.btnClose);
             this.Name = "MainForm";
             this.Text = "PCI服务端";
+            this.Activated += new System.EventHandler(this.MainForm_Activated);
+            this.Deactivate += new System.EventHandler(this.MainForm_Deactivate);
             this.Load += new System.EventHandler(this.MainForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.tbrTravel1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.tbrRotation1)).EndInit();

@@ -1,6 +1,6 @@
 #include <Wire.h>
 #include <EEPROM.h>
-#include <Adafruit_PWMServoDriver.h>
+#include "Adafruit_PWMServoDriver.h"
 
 #define SERVOMIN 150 // this is the 'minimum' pulse length count (out of 4096) 
 #define SERVOMAX 600 // this is the 'maximum' pulse length count (out of 4096)
@@ -23,6 +23,12 @@
 
 // constants
 const int max_pressure = 1000;  // 1000Kpa = 1MPa
+
+enum SERIAL_TYPE {
+  DEVICE_DATA       = 0,
+  ADV_CONFIG_DATA   = 1,
+  SERVO_SET_DATA    = 2
+};
 
 // eep rom structs total Bytes: 26
 struct AdvConfig {
@@ -84,30 +90,37 @@ union ServoSetDataUnion {
   byte servo_set_data_bytes[2];
 };
 
-AdvConfigUnion adv_config_union;
-DeviceDataUnion device_data_union;
-ServoSetDataUnion servo_set_data_union;
 
 // variables
 Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
 
 unsigned long currTime = 0;
-unsigned long readTime = 0;
 unsigned long sendTime = 0;
 
-const unsigned long readInterval = 30;
 const unsigned long sendInterval = 30;
 
-byte recvBuffer[6];
+AdvConfigUnion adv_config_union;
+ServoSetDataUnion servo_set_data_union;
+
+DeviceDataUnion device_data_union;
+DeviceDataUnion device_data_union_prev;
+byte recvBuffer[30];
 int recvBufferIndex = 0;
-byte SendBuffer[15];
-byte currSendBuffer[18];
+SERIAL_TYPE serialType;
 
 // servo operation
 // -----------------------------------------------------------
 void Servo_180(int num, int degree) {
   long us = (degree * 1800 / 180 + 600);  // 0.6 ~ 2.4
-  long pwmvalue = us * 4096 / 20000;      // 50hz: 20,000 us pwm.setPWM(num, 0, pwmvalue);
+  long pwmvalue = us * 4096 / 20000;      // 50hz: 20,000 us 
+  pwm.setPWM(num, 0, pwmvalue);
+  if (num == 0) {
+    device_data_union.device_data.servo_angle1 = degree;
+  } else if (num == 1) {
+    device_data_union.device_data.servo_angle2 = degree;
+  } else if (num == 2) {
+    device_data_union.device_data.servo_angle3 = degree;
+  }
 }
 
 // -----------------------------------------------------------
@@ -142,6 +155,11 @@ void setup(){//将步进电机用到的IO管脚设置成输出
 // -----------------------------------------------------------
 void loadAdvConfig() {
   EEPROM.get(0, adv_config_union);
+}
+
+// -----------------------------------------------------------
+void saveAdvConfig() {
+  EEPROM.put(0, adv_config_union);
 }
 
 // -----------------------------------------------------------
@@ -192,88 +210,26 @@ void looseAllServos(){
 void loop(){
   // read sensors at a constant speed
   currTime = millis();
-  
-  if (currTime - prevReadTime > readInterval) {
+
+  if (currTime - sendTime > sendInterval) {
     // read pressure();
-    pressure = readPressure();
+    device_data_union.device_data.pressure = readPressure();
     // read contrast()
-    contrast = readContrast();
+    device_data_union.device_data.contrast = readContrast();
     // read switch status
-    switchStatus1 = readSwitchStatus1();    
-    switchStatus2 = readSwitchStatus2();
-    // write serial
-    /*
-     * 起始符   3 
-     * 主跟踪单元位置   2
-     * 主跟踪单元角度   2
-     * 副跟踪单元位置   2
-     * 副跟踪单元角度   2
-     * 造影剂剂量   2
-     * 加压泵压力   2
-     * 脚踏开关状态  1
-     * 结束符   1
-     */
+    device_data_union.device_data.switch1 = readSwitchStatus1(); 
+    device_data_union.device_data.switch2 = readSwitchStatus2();
+    // read hall data       
+    device_data_union.device_data.hall_value1 = readHall1();
+    device_data_union.device_data.hall_value2 = readHall2();
+    device_data_union.device_data.hall_value3 = readHall3();
 
-     /*
-    test_master_position += 5;
-    if (test_master_position >= 7500) {
-      test_master_position = 0;
-    }
-
-    test_master_rotation += 1;
-    if (test_master_rotation > 360) {
-      test_master_rotation = 0;
-    }
-
-    test_slave_position += 5;
-    if (test_slave_position >= 7500) {
-      test_slave_position = 0;
-    }
-
-    test_slave_rotation += 1;
-    if (test_slave_rotation > 360) {
-      test_slave_rotation = 0;
-    }*/
-    
-    int master_position = 10 * (master_module_position - (master_move_value * 1.0 * master_vision_width / 320));
-    // Serial.println(master_position);
-    master_position = master_position >= 0 && master_tracing ? (int)master_position : 0;
-    int slave_position = 10 * (slave_module_position + (slave_move_value * 1.0 * slave_vision_width / 320));
-    // Serial.println(master_position);
-    slave_position = slave_position >= 0 && slave_tracing ? (int)slave_position : 0;    
-    currSendBuffer[0] = '^';
-    if (heartbeat_status == 0) {
-      currSendBuffer[1] = 0;
-    } else {
-      if (init_status == 0) {
-        currSendBuffer[1] = 1;
-      } else if (init_status == 1) {
-        currSendBuffer[1] = 2;
-      } else if (init_status == 2) {
-        currSendBuffer[1] = 3;
-      } else {
-        currSendBuffer[1] = 255;
-      }  
-    }
-    currSendBuffer[2] = lowByte(master_position);
-    currSendBuffer[3] = highByte(master_position);
-    currSendBuffer[4] = lowByte(master_spin_value);
-    currSendBuffer[5] = highByte(master_spin_value);
-    currSendBuffer[6] = lowByte(slave_position);
-    currSendBuffer[7] = highByte(slave_position);
-    currSendBuffer[8] = lowByte(slave_spin_value);
-    currSendBuffer[9] = highByte(slave_spin_value);
-    currSendBuffer[10] = lowByte(contrast);
-    currSendBuffer[11] = highByte(contrast);
-    currSendBuffer[12] = lowByte(pressure);
-    currSendBuffer[13] = highByte(pressure);
-    currSendBuffer[14] = switchStatus1;
-    currSendBuffer[15] = switchStatus2;
-    currSendBuffer[16] = '\n';
-
-    if (memcmp(currSendBuffer, prevSendBuffer, 17) != 0) {
-      Serial.write(currSendBuffer, 17);
-      memcpy(prevSendBuffer, currSendBuffer, 17);
+    if (memcmp(device_data_union.device_data_bytes, device_data_union_prev.device_data_bytes, sizeof(device_data_union.device_data_bytes)) != 0) {
+      Serial.write('^');  // start sysbol
+      Serial.write(DEVICE_DATA);
+      Serial.write(device_data_union.device_data_bytes, sizeof(device_data_union.device_data_bytes));
+      Serial.write('\n');
+      memcpy(device_data_union_prev.device_data_bytes, device_data_union.device_data_bytes, sizeof(device_data_union.device_data_bytes));
     }
    
     // read serial
@@ -281,24 +237,43 @@ void loop(){
       // read the incoming byte:
       char ch = Serial.read();
       if (ch == '^') {
-        readBufferIndex = 0; 
+        recvBufferIndex = 0; 
       } else if (ch == '\n') {
-        // trigger control
-        triggerEvent(readBuffer[1], readBuffer[2], readBuffer[3] + (readBuffer[4] << 8));       
+        // get serial data according to serial type
+        if (serialType == DEVICE_DATA) {
+          // should not get device data, ignore
+        } else if (serialType == SERVO_SET_DATA) {
+          // get servo angle
+          for (byte n = 0; n < sizeof(servo_set_data_union.servo_set_data_bytes); n++) {
+            servo_set_data_union.servo_set_data_bytes[n] = recvBuffer[n];
+          }
+          // set servo angle
+          Servo_180(servo_set_data_union.servo_set_data.index, servo_set_data_union.servo_set_data.angle);
+        } else if (serialType == ADV_CONFIG_DATA) {
+          if (recvBufferIndex > 10) {
+            // update and save adv config data
+            for (byte n = 0; n < sizeof(adv_config_union.adv_config_bytes); n++) {
+              adv_config_union.adv_config_bytes[n] = recvBuffer[n];
+            }
+            saveAdvConfig();   
+          } else {
+            // send adv config data
+            Serial.write('^');  // start sysbol
+            Serial.write(ADV_CONFIG_DATA);
+            Serial.write(adv_config_union.adv_config_bytes, sizeof(adv_config_union.adv_config_bytes));
+            Serial.write('\n');
+          }
+        }
       }
-      if (readBufferIndex < 5) {
-        readBuffer[readBufferIndex] = ch;
+      if (recvBufferIndex == 1) {
+        serialType = ch;
+      } else if (recvBufferIndex > 1 && recvBufferIndex < sizeof(recvBuffer)) {
+        recvBuffer[recvBufferIndex - 1] = ch;
       }
-      readBufferIndex ++;
+      recvBufferIndex ++;
     }
-
-    // check heartbeat
-    check_heartbeat();
     
     // update prev read time
-    
-    prevReadTime = currTime;    
-
+    sendTime = currTime;    
   }
-  
 }

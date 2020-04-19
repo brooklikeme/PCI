@@ -1,13 +1,10 @@
 #include <Wire.h>
 #include <EEPROM.h>
-#include "Adafruit_PWMServoDriver.h"
+#include <Servo.h>
 
-#define SERVOMIN 150 // this is the 'minimum' pulse length count (out of 4096) 
-#define SERVOMAX 600 // this is the 'maximum' pulse length count (out of 4096)
-
-#define FORCE_PIN1 4
-#define FORCE_PIN2 5
-#define FORCE_PIN3 6
+#define SERVO_PIN1 4
+#define SERVO_PIN2 5
+#define SERVO_PIN3 6
 
 #define CONTRAST_PIN A4
 #define PRESSURE_PIN A5
@@ -20,6 +17,10 @@
 #define HALL_PIN1 A0
 #define HALL_PIN2 A1
 #define HALL_PIN3 A2
+
+Servo servo1; 
+Servo servo2; 
+Servo servo3; 
 
 // constants
 const int max_pressure = 1000;  // 1000Kpa = 1MPa
@@ -91,13 +92,10 @@ union ServoSetDataUnion {
 };
 
 
-// variables
-Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
-
 unsigned long currTime = 0;
 unsigned long sendTime = 0;
 
-const unsigned long sendInterval = 30;
+const unsigned long sendInterval = 1000;
 
 AdvConfigUnion adv_config_union;
 ServoSetDataUnion servo_set_data_union;
@@ -111,23 +109,21 @@ SERIAL_TYPE serialType;
 // servo operation
 // -----------------------------------------------------------
 void Servo_180(int num, int degree) {
-  long us = (degree * 1800 / 180 + 600);  // 0.6 ~ 2.4
-  long pwmvalue = us * 4096 / 20000;      // 50hz: 20,000 us 
-  pwm.setPWM(num, 0, pwmvalue);
   if (num == 0) {
     device_data_union.device_data.servo_angle1 = degree;
+    servo1.write(device_data_union.device_data.servo_angle1);
   } else if (num == 1) {
     device_data_union.device_data.servo_angle2 = degree;
+    servo2.write(device_data_union.device_data.servo_angle2);
   } else if (num == 2) {
     device_data_union.device_data.servo_angle3 = degree;
+    servo3.write(device_data_union.device_data.servo_angle3);
   }
+  delay(15);
 }
 
 // -----------------------------------------------------------
 void setup(){//将步进电机用到的IO管脚设置成输出
-
-  pwm.begin(); 
-  pwm.setPWMFreq(60);
 
   pinMode(PRESSURE_PIN, INPUT);
   pinMode(CONTRAST_PIN, INPUT);
@@ -141,6 +137,10 @@ void setup(){//将步进电机用到的IO管脚设置成输出
   
   pinMode(HEARTBEAT_PIN, OUTPUT);
   digitalWrite(HEARTBEAT_PIN, LOW);
+
+  servo1.attach(SERVO_PIN1); 
+  servo2.attach(SERVO_PIN2); 
+  servo3.attach(SERVO_PIN3); 
 
   // load EEPROM data
   loadAdvConfig();
@@ -203,14 +203,12 @@ void looseAllServos(){
   Servo_180(0, adv_config_union.adv_confg.min_servo_angle1);
   Servo_180(1, adv_config_union.adv_confg.min_servo_angle2);
   Servo_180(2, adv_config_union.adv_confg.min_servo_angle3); 
-  delay(500);
 }
 
 // -----------------------------------------------------------
 void loop(){
   // read sensors at a constant speed
   currTime = millis();
-
   if (currTime - sendTime > sendInterval) {
     // read pressure();
     device_data_union.device_data.pressure = readPressure();
@@ -223,6 +221,27 @@ void loop(){
     device_data_union.device_data.hall_value1 = readHall1();
     device_data_union.device_data.hall_value2 = readHall2();
     device_data_union.device_data.hall_value3 = readHall3();
+
+    Serial.print("hall1: ");
+    Serial.print(device_data_union.device_data.hall_value1);
+    Serial.print(", hall2: ");
+    Serial.print(device_data_union.device_data.hall_value2);    
+    Serial.print(", hall3: ");
+    Serial.print(device_data_union.device_data.hall_value3);
+    Serial.print(", pressure: ");
+    Serial.print(device_data_union.device_data.pressure);
+    Serial.print(", contrast: ");
+    Serial.print(device_data_union.device_data.contrast);
+    Serial.print(", switch1: ");
+    Serial.print(device_data_union.device_data.switch1);
+    Serial.print(", switch2: ");
+    Serial.print(device_data_union.device_data.switch2);
+    Serial.print(", servo_angle1: ");
+    Serial.print(device_data_union.device_data.servo_angle1);            
+    Serial.print(", servo_angle2: ");
+    Serial.print(device_data_union.device_data.servo_angle2);  
+    Serial.print(", servo_angle3: ");
+    Serial.println(device_data_union.device_data.servo_angle3);          
 
     if (memcmp(device_data_union.device_data_bytes, device_data_union_prev.device_data_bytes, sizeof(device_data_union.device_data_bytes)) != 0) {
       Serial.write('^');  // start sysbol

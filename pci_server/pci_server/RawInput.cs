@@ -9,9 +9,274 @@ using System.Windows.Forms;
 using Microsoft.Win32;
 using System.Configuration;
 using System.Collections.Specialized;
+using System.IO.Ports;
+using System.Drawing;
 
 namespace pci_server
 {
+    enum SERIAL_TYPE
+    {
+        DEVICE_DATA = 0,
+        ADV_CONFIG_DATA = 1,
+        SERVO_SET_DATA = 2,
+        SERIAL_NONE = 100
+    }
+
+    class AdvConfig
+    {
+        public byte min_hall_diam1;    //1
+        public int min_hall_value1;    //2
+        public byte max_hall_diam1;    //1
+        public int max_hall_value1;    //2
+        public byte min_hall_diam2;    //1
+        public int min_hall_value2;    //2
+        public byte max_hall_diam2;    //1
+        public int max_hall_value2;    //2
+        public byte min_hall_diam3;    //1
+        public int min_hall_value3;    //2
+        public byte max_hall_diam3;    //1
+        public int max_hall_value3;    //2
+
+        public byte min_servo_angle1;  //1
+        public byte max_servo_angle1;  //1
+        public byte min_servo_angle2;  //1
+        public byte max_servo_angle2;  //1
+        public byte min_servo_angle3;  //1
+        public byte max_servo_angle3;  //1
+
+        public int contrast_threshold; //2
+    };
+
+    class DeviceData
+    {
+        public int hall_value1;        //2
+        public int hall_value2;        //2
+        public int hall_value3;        //2
+        public int pressure;           //2
+        public int contrast;           //2
+        public byte switch1;           //1
+        public byte switch2;           //1
+        public byte servo_angle1;      //1
+        public byte servo_angle2;      //1  
+        public byte servo_angle3;      //1
+    }
+
+    static class USBSerial
+    {
+        private static byte[] RecvBuffer = new byte[30];
+        private static byte[] SendBuffer = new byte[30];
+        private static int RecvBufferIndex = 0;
+        private static SERIAL_TYPE SerialType;
+
+        private static SerialPort _comDevice = new SerialPort();
+
+        private static DeviceData _deviceData = new DeviceData();
+        private static AdvConfig _advConfig = new AdvConfig();
+
+        public delegate void DeviceDataReceived(DeviceData deviceData);
+        public static event DeviceDataReceived deviceDataReceived;
+
+        public delegate void AdvConfigDataReceived(AdvConfig advConfigData);
+        public static event AdvConfigDataReceived advConfigDataReceived;
+
+        public delegate void SendDataError(string errMessage);
+        public static event SendDataError sendDataError;
+
+        public static double map(double value, double fromLow, double fromHigh, double toLow, double toHigh)
+        {
+            return (value - fromLow) * (toHigh - toLow) / (fromHigh - fromLow) + toLow;
+        }
+
+        static USBSerial(){
+            _comDevice.DataReceived += new SerialDataReceivedEventHandler(Com_DataReceived);//绑定事件
+        }
+
+        public static SerialPort ComDevice
+        {
+            get { return _comDevice; }
+            set { _comDevice = value; }
+        }
+
+        public static DeviceData deviceData
+        {
+            get { return _deviceData; }
+            set { _deviceData = value; }
+        }
+
+        public static AdvConfig advConfig
+        {
+            get { return _advConfig; }
+            set { _advConfig = value; }
+        }
+
+        private static bool SendData(byte[] data, int length)
+        {
+            if (ComDevice.IsOpen)
+            {
+                try
+                {
+                    ComDevice.Write(data, 0, length);//发送数据
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    if (sendDataError != null)
+                    {
+                        sendDataError(ex.Message);
+                    }
+                }
+            }
+            return false;
+        }
+
+        public static void RequestAdvConfig()
+        {
+            SendBuffer[0] = (byte)SERIAL_TYPE.ADV_CONFIG_DATA;
+            SendBuffer[1] = (byte)'+';
+            SendBuffer[2] = (byte)'+';
+            SendBuffer[3] = (byte)'+';
+            SendData(SendBuffer, 4);
+        }
+
+        public static void SetServoAngle(int num, int angle)
+        {
+            SendBuffer[0] = (byte)SERIAL_TYPE.SERVO_SET_DATA;
+            SendBuffer[1] = (byte)num;
+            SendBuffer[2] = (byte)angle;
+            SendBuffer[3] = (byte)'+';
+            SendBuffer[4] = (byte)'+';
+            SendBuffer[5] = (byte)'+';
+            SendData(SendBuffer, 6);
+        }
+
+        public static void UpdateAdvConfig()
+        {
+            SendBuffer[0] = (byte)SERIAL_TYPE.ADV_CONFIG_DATA;
+
+            SendBuffer[1] = _advConfig.min_hall_diam1;
+            SendBuffer[2] = BitConverter.GetBytes((Int16)_advConfig.min_hall_value1)[0];
+            SendBuffer[3] = BitConverter.GetBytes((Int16)_advConfig.min_hall_value1)[1];
+            SendBuffer[4] = _advConfig.max_hall_diam1;
+            SendBuffer[5] = BitConverter.GetBytes((Int16)_advConfig.max_hall_value1)[0];
+            SendBuffer[6] = BitConverter.GetBytes((Int16)_advConfig.max_hall_value1)[1];
+
+            SendBuffer[7] = _advConfig.min_hall_diam2;
+            SendBuffer[8] = BitConverter.GetBytes((Int16)_advConfig.min_hall_value2)[0];
+            SendBuffer[9] = BitConverter.GetBytes((Int16)_advConfig.min_hall_value2)[1];
+            SendBuffer[10] = _advConfig.max_hall_diam2;
+            SendBuffer[11] = BitConverter.GetBytes((Int16)_advConfig.max_hall_value2)[0];
+            SendBuffer[12] = BitConverter.GetBytes((Int16)_advConfig.max_hall_value2)[1];
+
+            SendBuffer[13] = _advConfig.min_hall_diam3;
+            SendBuffer[14] = BitConverter.GetBytes((Int16)_advConfig.min_hall_value3)[0];
+            SendBuffer[15] = BitConverter.GetBytes((Int16)_advConfig.min_hall_value3)[1];
+            SendBuffer[16] = _advConfig.max_hall_diam3;
+            SendBuffer[17] = BitConverter.GetBytes((Int16)_advConfig.max_hall_value3)[0];
+            SendBuffer[18] = BitConverter.GetBytes((Int16)_advConfig.max_hall_value3)[1];
+
+            SendBuffer[19] = _advConfig.min_servo_angle1;
+            SendBuffer[20] = _advConfig.max_servo_angle1;
+            SendBuffer[21] = _advConfig.min_servo_angle2;
+            SendBuffer[22] = _advConfig.max_servo_angle2;
+            SendBuffer[23] = _advConfig.min_servo_angle3;
+            SendBuffer[24] = _advConfig.max_servo_angle3;
+
+            SendBuffer[25] = BitConverter.GetBytes((Int16)_advConfig.contrast_threshold)[0];
+            SendBuffer[26] = BitConverter.GetBytes((Int16)_advConfig.contrast_threshold)[1];
+
+            SendBuffer[27] = (byte)'+';
+            SendBuffer[28] = (byte)'+';
+            SendBuffer[29] = (byte)'+';
+            SendData(SendBuffer, 30);
+        }
+
+        private static void Com_DataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            byte[] ReDatas = new byte[ComDevice.BytesToRead];
+            ComDevice.Read(ReDatas, 0, ReDatas.Length);//读取数据
+            foreach (byte item in ReDatas)
+            {
+                RecvBuffer[RecvBufferIndex] = item;
+                // check packet complete
+                if (RecvBufferIndex > 2 && item == '+' && RecvBuffer[RecvBufferIndex - 1] == '+' && RecvBuffer[RecvBufferIndex - 2] == '+')
+                {
+                    SerialType = (SERIAL_TYPE)RecvBuffer[0];
+                    ParseContent();
+                    SerialType = SERIAL_TYPE.SERIAL_NONE;
+                    RecvBufferIndex = 0;
+                }
+                else
+                {
+                    RecvBufferIndex++;
+                }
+                if (RecvBufferIndex == 30)
+                {
+                    RecvBufferIndex = 0;
+                }
+            }
+        }
+
+        private static void ParseContent()
+        {
+            if (SerialType == SERIAL_TYPE.ADV_CONFIG_DATA && RecvBufferIndex == 29)
+            {
+                _advConfig.min_hall_diam1 = RecvBuffer[1];
+                _advConfig.min_hall_value1 = BitConverter.ToInt16(new byte[] { RecvBuffer[2], RecvBuffer[3] }, 0);
+                _advConfig.max_hall_diam1 = RecvBuffer[4];
+                _advConfig.max_hall_value1 = BitConverter.ToInt16(new byte[] { RecvBuffer[5], RecvBuffer[6] }, 0);
+                _advConfig.min_hall_diam2 = RecvBuffer[7];
+                _advConfig.min_hall_value2 = BitConverter.ToInt16(new byte[] { RecvBuffer[8], RecvBuffer[9] }, 0);
+                _advConfig.max_hall_diam2 = RecvBuffer[10];
+                _advConfig.max_hall_value2 = BitConverter.ToInt16(new byte[] { RecvBuffer[11], RecvBuffer[12] }, 0);
+                _advConfig.min_hall_diam3 = RecvBuffer[13];
+                _advConfig.min_hall_value3 = BitConverter.ToInt16(new byte[] { RecvBuffer[14], RecvBuffer[15] }, 0);
+                _advConfig.max_hall_diam3 = RecvBuffer[16];
+                _advConfig.max_hall_value3 = BitConverter.ToInt16(new byte[] { RecvBuffer[17], RecvBuffer[18] }, 0);
+
+                _advConfig.min_servo_angle1 = RecvBuffer[19];
+                _advConfig.max_servo_angle1 = RecvBuffer[20];
+                _advConfig.min_servo_angle2 = RecvBuffer[21];
+                _advConfig.max_servo_angle2 = RecvBuffer[22];
+                _advConfig.min_servo_angle3 = RecvBuffer[23];
+                _advConfig.max_servo_angle3 = RecvBuffer[24];
+
+                _advConfig.contrast_threshold = BitConverter.ToInt16(new byte[] { RecvBuffer[25], RecvBuffer[26] }, 0);
+
+                // trigger adv config data received event
+                if (advConfigDataReceived != null)
+                {
+                    advConfigDataReceived(_advConfig);
+                }
+            }
+            else if (SerialType == SERIAL_TYPE.DEVICE_DATA && RecvBufferIndex == 18)
+            {
+                _deviceData.hall_value1 = BitConverter.ToInt16(new byte[] { RecvBuffer[1], RecvBuffer[2] }, 0);
+                _deviceData.hall_value2 = BitConverter.ToInt16(new byte[] { RecvBuffer[3], RecvBuffer[4] }, 0);
+                _deviceData.hall_value3 = BitConverter.ToInt16(new byte[] { RecvBuffer[5], RecvBuffer[6] }, 0);
+
+                _deviceData.pressure = BitConverter.ToInt16(new byte[] { RecvBuffer[7], RecvBuffer[8] }, 0);
+                _deviceData.contrast = BitConverter.ToInt16(new byte[] { RecvBuffer[9], RecvBuffer[10] }, 0);
+
+                _deviceData.switch1 = RecvBuffer[11];
+                _deviceData.switch2 = RecvBuffer[12];
+                _deviceData.servo_angle1 = RecvBuffer[13];
+                _deviceData.servo_angle2 = RecvBuffer[14];
+                _deviceData.servo_angle3 = RecvBuffer[15];
+
+                RecvBufferIndex = 0;
+                SerialType = SERIAL_TYPE.SERIAL_NONE;
+
+                // trigger device data received event
+                if (deviceDataReceived != null)
+                {
+                    deviceDataReceived(_deviceData);
+                }
+            }
+        }
+
+
+    }
+
     static class PCIConfig
     {
         private static Dictionary<string, string> _baseConfig = new Dictionary<string, string>();
@@ -119,6 +384,8 @@ namespace pci_server
         private const int WM_INPUT = 0x00FF;
         private const int VK_OEM_CLEAR = 0xFE;
         private const int VK_LAST_KEY = VK_OEM_CLEAR; // this is a made up value used as a sentinal
+
+        public Point CurrentCursorPoint;
 
         #endregion const definitions
 
@@ -281,6 +548,14 @@ namespace pci_server
             public int probeIndex;
         }
 
+        public struct RECT
+        {
+            public int left;
+            public int top;
+            public int right;
+            public int bottom;
+        };
+
         #endregion structs & enums
 
         #region DllImports
@@ -296,6 +571,38 @@ namespace pci_server
 
         [DllImport("User32.dll")]
         extern static uint GetRawInputData(IntPtr hRawInput, uint uiCommand, IntPtr pData, ref uint pcbSize, uint cbSizeHeader);
+
+        [DllImport("User32.dll")]
+        extern static bool ClipCursor(ref RECT lpRect);
+
+        [DllImport("User32.dll")]
+        extern static bool ClipCursor([In()]IntPtr lpRect);
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct POINT
+        {
+            public int X;
+            public int Y;
+
+            public static implicit operator Point(POINT point)
+            {
+                return new Point(point.X, point.Y);
+            }
+        }
+
+        /// <summary>
+        /// Retrieves the cursor's position, in screen coordinates.
+        /// </summary>
+        /// <see>See MSDN documentation for further information.</see>
+        [DllImport("user32.dll")]
+        public static extern bool GetCursorPos(out POINT lpPoint);
+
+        public static Point GetCursorPosition()
+        {
+            POINT lpPoint;
+            GetCursorPos(out lpPoint);
+            return lpPoint;
+        }
 
         #endregion DllImports
 
@@ -496,8 +803,9 @@ namespace pci_server
         /// keyboard events that occur.
         /// </summary>
         /// <param name="message">The WM_INPUT message to process.</param>
-        public void ProcessInputCommand(Message message)
+        public bool ProcessInputCommand(Message message)
         {
+            bool is_probe = false;
             uint dwSize = 0;
 
             // First call to GetRawInputData sets the value of dwSize
@@ -540,6 +848,10 @@ namespace pci_server
                             dInfo.lastY = raw.mouse.lLastY;
                             dInfo.cumulativeX += dInfo.lastX;
                             dInfo.cumulativeY += dInfo.lastY;
+                            if (dInfo.probeIndex > 0 && dInfo.probeIndex < 4)
+                            {
+                                is_probe = true;
+                            }
                         }
 
                         if (MouseMoved != null && dInfo != null)
@@ -553,6 +865,17 @@ namespace pci_server
             {
                 Marshal.FreeHGlobal(buffer);
             }
+            if (is_probe)
+            {
+                DisableMouse();
+            }
+            else
+            {
+                EnableMouse();
+                CurrentCursorPoint = GetCursorPosition();
+            }
+
+            return is_probe;
         }
 
         #endregion ProcessInputCommand( Message message )
@@ -593,16 +916,16 @@ namespace pci_server
         /// ProcessInputCommand if necessary.
         /// </summary>
         /// <param name="message">The Windows message.</param>
-        public void ProcessMessage(Message message)
+        public bool ProcessMessage(Message message)
         {
             switch (message.Msg)
             {
                 case WM_INPUT:
                 {
-                    ProcessInputCommand(message);
+                    return ProcessInputCommand(message);
                 }
-                break;
             }
+            return false;
         }
 
         #endregion ProcessMessage( Message message )
@@ -674,7 +997,20 @@ namespace pci_server
                 }
             }
         }
+        
+        public void DisableMouse()
+        {
+            RECT r;
+            r.left = CurrentCursorPoint.X;
+            r.top = CurrentCursorPoint.Y;
+            r.right = CurrentCursorPoint.X + 1;
+            r.bottom = CurrentCursorPoint.Y + 1;
+            ClipCursor(ref r);
+        }
 
-
+        public void EnableMouse()
+        {
+            ClipCursor(IntPtr.Zero);
+        }
     }
 }

@@ -28,7 +28,8 @@ const int max_pressure = 1000;  // 1000Kpa = 1MPa
 enum SERIAL_TYPE {
   DEVICE_DATA       = 0,
   ADV_CONFIG_DATA   = 1,
-  SERVO_SET_DATA    = 2
+  SERVO_SET_DATA    = 2,
+  SERIAL_NONE       = 100
 };
 
 // eep rom structs total Bytes: 26
@@ -57,7 +58,7 @@ struct AdvConfig {
 };
 
 union AdvConfigUnion {
-   AdvConfig adv_confg;
+   AdvConfig adv_config;
    byte adv_config_bytes[26];
 };
 
@@ -95,7 +96,7 @@ union ServoSetDataUnion {
 unsigned long currTime = 0;
 unsigned long sendTime = 0;
 
-const unsigned long sendInterval = 1000;
+const unsigned long sendInterval = 200;
 
 AdvConfigUnion adv_config_union;
 ServoSetDataUnion servo_set_data_union;
@@ -142,6 +143,9 @@ void setup(){//将步进电机用到的IO管脚设置成输出
   servo2.attach(SERVO_PIN2); 
   servo3.attach(SERVO_PIN3); 
 
+  // adv_config_union.adv_config.min_hall_diam1 = 100;
+  // saveAdvConfig();
+  // delay(100);
   // load EEPROM data
   loadAdvConfig();
 
@@ -200,9 +204,9 @@ int readHall3() {
 
 // -----------------------------------------------------------
 void looseAllServos(){
-  Servo_180(0, adv_config_union.adv_confg.min_servo_angle1);
-  Servo_180(1, adv_config_union.adv_confg.min_servo_angle2);
-  Servo_180(2, adv_config_union.adv_confg.min_servo_angle3); 
+  Servo_180(0, adv_config_union.adv_config.min_servo_angle1);
+  Servo_180(1, adv_config_union.adv_config.min_servo_angle2);
+  Servo_180(2, adv_config_union.adv_config.min_servo_angle3); 
 }
 
 // -----------------------------------------------------------
@@ -222,6 +226,7 @@ void loop(){
     device_data_union.device_data.hall_value2 = readHall2();
     device_data_union.device_data.hall_value3 = readHall3();
 
+/*
     Serial.print("hall1: ");
     Serial.print(device_data_union.device_data.hall_value1);
     Serial.print(", hall2: ");
@@ -241,13 +246,59 @@ void loop(){
     Serial.print(", servo_angle2: ");
     Serial.print(device_data_union.device_data.servo_angle2);  
     Serial.print(", servo_angle3: ");
-    Serial.println(device_data_union.device_data.servo_angle3);          
+    Serial.println(device_data_union.device_data.servo_angle3); 
+
+    Serial.print("min_hall_diam1: ");
+    Serial.print(adv_config_union.adv_config.min_hall_diam1);
+    Serial.print(", min_hall_value1: ");
+    Serial.print(adv_config_union.adv_config.min_hall_value1);    
+    Serial.print(", max_hall_diam1: ");
+    Serial.print(adv_config_union.adv_config.max_hall_diam1);
+    Serial.print(", max_hall_value1: ");
+    Serial.print(adv_config_union.adv_config.max_hall_value1);
+    
+    Serial.print("min_hall_diam2: ");
+    Serial.print(adv_config_union.adv_config.min_hall_diam2);
+    Serial.print(", min_hall_value2: ");
+    Serial.print(adv_config_union.adv_config.min_hall_value2);    
+    Serial.print(", max_hall_diam2: ");
+    Serial.print(adv_config_union.adv_config.max_hall_diam2);
+    Serial.print(", max_hall_value2: ");
+    Serial.print(adv_config_union.adv_config.max_hall_value2);
+
+    Serial.print("min_hall_diam3: ");
+    Serial.print(adv_config_union.adv_config.min_hall_diam3);
+    Serial.print(", min_hall_value3: ");
+    Serial.print(adv_config_union.adv_config.min_hall_value3);    
+    Serial.print(", max_hall_diam3: ");
+    Serial.print(adv_config_union.adv_config.max_hall_diam3);
+    Serial.print(", max_hall_value3: ");
+    Serial.print(adv_config_union.adv_config.max_hall_value3);
+
+    Serial.print(", min_servo_angle1: ");
+    Serial.print(adv_config_union.adv_config.min_servo_angle1);
+    Serial.print(", max_servo_angle1: ");
+    Serial.print(adv_config_union.adv_config.max_servo_angle1);
+    Serial.print(", min_servo_angle2: ");
+    Serial.print(adv_config_union.adv_config.min_servo_angle2);
+    Serial.print(", max_servo_angle2: ");
+    Serial.print(adv_config_union.adv_config.max_servo_angle2);
+    Serial.print(", min_servo_angle3: ");
+    Serial.print(adv_config_union.adv_config.min_servo_angle3);
+    Serial.print(", max_servo_angle3: ");
+    Serial.print(adv_config_union.adv_config.max_servo_angle3);        
+
+    Serial.print(", contrast_threshold: ");
+    Serial.println(adv_config_union.adv_config.contrast_threshold);   
+
+    */
 
     if (memcmp(device_data_union.device_data_bytes, device_data_union_prev.device_data_bytes, sizeof(device_data_union.device_data_bytes)) != 0) {
-      Serial.write('^');  // start sysbol
       Serial.write(DEVICE_DATA);
       Serial.write(device_data_union.device_data_bytes, sizeof(device_data_union.device_data_bytes));
-      Serial.write('\n');
+      Serial.write('+');  // end sysbol
+      Serial.write('+');  // end sysbol
+      Serial.write('+');  // end sysbol      
       memcpy(device_data_union_prev.device_data_bytes, device_data_union.device_data_bytes, sizeof(device_data_union.device_data_bytes));
     }
    
@@ -255,43 +306,44 @@ void loop(){
     while (Serial.available() > 0) {
       // read the incoming byte:
       char ch = Serial.read();
-      if (ch == '^') {
-        recvBufferIndex = 0; 
-      } else if (ch == '\n') {
-        // get serial data according to serial type
-        if (serialType == DEVICE_DATA) {
-          // should not get device data, ignore
-        } else if (serialType == SERVO_SET_DATA) {
-          // get servo angle
+      
+      recvBuffer[recvBufferIndex] = ch;
+      // check packet complete
+      if (recvBufferIndex > 2 && ch == '+' && recvBuffer[recvBufferIndex - 1] == '+' && recvBuffer[recvBufferIndex - 2] == '+') {
+        serialType = recvBuffer[0];
+        if (serialType == SERVO_SET_DATA && recvBufferIndex == sizeof(servo_set_data_union.servo_set_data_bytes) + 3) {
+          // set servo angle
           for (byte n = 0; n < sizeof(servo_set_data_union.servo_set_data_bytes); n++) {
-            servo_set_data_union.servo_set_data_bytes[n] = recvBuffer[n];
+            servo_set_data_union.servo_set_data_bytes[n] = recvBuffer[n + 1];
           }
           // set servo angle
-          Servo_180(servo_set_data_union.servo_set_data.index, servo_set_data_union.servo_set_data.angle);
-        } else if (serialType == ADV_CONFIG_DATA) {
-          if (recvBufferIndex > 10) {
+          Servo_180(servo_set_data_union.servo_set_data.index, servo_set_data_union.servo_set_data.angle);            
+        } else 
+        if (serialType == ADV_CONFIG_DATA) {
+          if (recvBufferIndex == sizeof(adv_config_union.adv_config_bytes) + 3) {
             // update and save adv config data
             for (byte n = 0; n < sizeof(adv_config_union.adv_config_bytes); n++) {
-              adv_config_union.adv_config_bytes[n] = recvBuffer[n];
+              adv_config_union.adv_config_bytes[n] = recvBuffer[n + 1];
             }
             saveAdvConfig();   
           } else {
             // send adv config data
-            Serial.write('^');  // start sysbol
             Serial.write(ADV_CONFIG_DATA);
             Serial.write(adv_config_union.adv_config_bytes, sizeof(adv_config_union.adv_config_bytes));
-            Serial.write('\n');
-          }
+            Serial.write('+');  // end sysbol
+            Serial.write('+');  // end sysbol
+            Serial.write('+');  // end sysbol  
+          }          
         }
+        serialType = SERIAL_NONE;
+        recvBufferIndex = 0;
+      } else {
+        recvBufferIndex ++;
       }
-      if (recvBufferIndex == 1) {
-        serialType = ch;
-      } else if (recvBufferIndex > 1 && recvBufferIndex < sizeof(recvBuffer)) {
-        recvBuffer[recvBufferIndex - 1] = ch;
+      if (recvBufferIndex == sizeof(recvBuffer)) {
+        recvBufferIndex = 0;
       }
-      recvBufferIndex ++;
     }
-    
     // update prev read time
     sendTime = currTime;    
   }

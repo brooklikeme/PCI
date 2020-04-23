@@ -357,6 +357,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoSize = true;
             this.ClientSize = new System.Drawing.Size(1309, 759);
             this.Controls.Add(this.txtRotationSignal5);
             this.Controls.Add(this.txtTravelSignal5);

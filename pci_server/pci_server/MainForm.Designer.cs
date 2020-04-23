@@ -735,6 +735,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.AutoSize = true;
             this.ClientSize = new System.Drawing.Size(1628, 771);
             this.Controls.Add(this.lbThicknessValue3);
             this.Controls.Add(this.lbThicknessValue2);

@@ -33,7 +33,6 @@
             this.pbrPressure = new System.Windows.Forms.ProgressBar();
             this.tbrTravel1 = new System.Windows.Forms.TrackBar();
             this.lbProbe1 = new System.Windows.Forms.Label();
-            this.tbrRotation1 = new System.Windows.Forms.TrackBar();
             this.lbTravel1 = new System.Windows.Forms.Label();
             this.lbRotation1 = new System.Windows.Forms.Label();
             this.lbForce1 = new System.Windows.Forms.Label();
@@ -55,7 +54,6 @@
             this.lbForce2 = new System.Windows.Forms.Label();
             this.lbRotation2 = new System.Windows.Forms.Label();
             this.lbTravel2 = new System.Windows.Forms.Label();
-            this.tbrRotation2 = new System.Windows.Forms.TrackBar();
             this.lbProbe2 = new System.Windows.Forms.Label();
             this.tbrTravel2 = new System.Windows.Forms.TrackBar();
             this.pbxThickness3 = new System.Windows.Forms.PictureBox();
@@ -65,7 +63,6 @@
             this.lbForce3 = new System.Windows.Forms.Label();
             this.lbRotation3 = new System.Windows.Forms.Label();
             this.lbTravel3 = new System.Windows.Forms.Label();
-            this.tbrRotation3 = new System.Windows.Forms.TrackBar();
             this.lbProbe3 = new System.Windows.Forms.Label();
             this.tbrTravel3 = new System.Windows.Forms.TrackBar();
             this.pbxContrast = new System.Windows.Forms.PictureBox();
@@ -93,15 +90,16 @@
             this.lbThicknessValue1 = new System.Windows.Forms.Label();
             this.lbThicknessValue2 = new System.Windows.Forms.Label();
             this.lbThicknessValue3 = new System.Windows.Forms.Label();
+            this.cpbRotation1 = new CircularProgressBar.CircularProgressBar();
+            this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
+            this.cpbRotation2 = new CircularProgressBar.CircularProgressBar();
+            this.cpbRotation3 = new CircularProgressBar.CircularProgressBar();
             ((System.ComponentModel.ISupportInitialize)(this.tbrTravel1)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.tbrRotation1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbxSerialStatus)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbxThickness1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbxThickness2)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.tbrRotation2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.tbrTravel2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbxThickness3)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.tbrRotation3)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.tbrTravel3)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbxContrast)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbxSwitch1)).BeginInit();
@@ -110,7 +108,7 @@
             // 
             // btnClose
             // 
-            this.btnClose.Location = new System.Drawing.Point(1292, 676);
+            this.btnClose.Location = new System.Drawing.Point(1512, 862);
             this.btnClose.Name = "btnClose";
             this.btnClose.Size = new System.Drawing.Size(175, 61);
             this.btnClose.TabIndex = 0;
@@ -120,7 +118,7 @@
             // 
             // pbrPressure
             // 
-            this.pbrPressure.Location = new System.Drawing.Point(123, 489);
+            this.pbrPressure.Location = new System.Drawing.Point(153, 675);
             this.pbrPressure.Maximum = 1000;
             this.pbrPressure.Name = "pbrPressure";
             this.pbrPressure.Size = new System.Drawing.Size(890, 20);
@@ -130,9 +128,8 @@
             // tbrTravel1
             // 
             this.tbrTravel1.Enabled = false;
-            this.tbrTravel1.Location = new System.Drawing.Point(117, 147);
-            this.tbrTravel1.Maximum = 10000;
-            this.tbrTravel1.Minimum = -10000;
+            this.tbrTravel1.Location = new System.Drawing.Point(1200, 371);
+            this.tbrTravel1.Maximum = 3000;
             this.tbrTravel1.Name = "tbrTravel1";
             this.tbrTravel1.Size = new System.Drawing.Size(505, 90);
             this.tbrTravel1.TabIndex = 10;
@@ -140,25 +137,16 @@
             // lbProbe1
             // 
             this.lbProbe1.AutoSize = true;
-            this.lbProbe1.Location = new System.Drawing.Point(30, 145);
+            this.lbProbe1.Location = new System.Drawing.Point(1419, 121);
             this.lbProbe1.Name = "lbProbe1";
             this.lbProbe1.Size = new System.Drawing.Size(68, 26);
             this.lbProbe1.TabIndex = 12;
             this.lbProbe1.Text = "探点1";
             // 
-            // tbrRotation1
-            // 
-            this.tbrRotation1.Enabled = false;
-            this.tbrRotation1.Location = new System.Drawing.Point(609, 147);
-            this.tbrRotation1.Maximum = 360;
-            this.tbrRotation1.Name = "tbrRotation1";
-            this.tbrRotation1.Size = new System.Drawing.Size(410, 90);
-            this.tbrRotation1.TabIndex = 13;
-            // 
             // lbTravel1
             // 
             this.lbTravel1.AutoSize = true;
-            this.lbTravel1.Location = new System.Drawing.Point(124, 111);
+            this.lbTravel1.Location = new System.Drawing.Point(1208, 315);
             this.lbTravel1.Name = "lbTravel1";
             this.lbTravel1.Size = new System.Drawing.Size(56, 26);
             this.lbTravel1.TabIndex = 14;
@@ -167,7 +155,7 @@
             // lbRotation1
             // 
             this.lbRotation1.AutoSize = true;
-            this.lbRotation1.Location = new System.Drawing.Point(636, 111);
+            this.lbRotation1.Location = new System.Drawing.Point(1563, 473);
             this.lbRotation1.Name = "lbRotation1";
             this.lbRotation1.Size = new System.Drawing.Size(56, 26);
             this.lbRotation1.TabIndex = 15;
@@ -176,16 +164,17 @@
             // lbForce1
             // 
             this.lbForce1.AutoSize = true;
-            this.lbForce1.Location = new System.Drawing.Point(1035, 111);
+            this.lbForce1.Location = new System.Drawing.Point(1467, 175);
             this.lbForce1.Name = "lbForce1";
             this.lbForce1.Size = new System.Drawing.Size(78, 26);
             this.lbForce1.TabIndex = 28;
             this.lbForce1.Text = "力反馈";
+            this.lbForce1.Click += new System.EventHandler(this.lbForce1_Click);
             // 
             // lbContrast
             // 
             this.lbContrast.AutoSize = true;
-            this.lbContrast.Location = new System.Drawing.Point(30, 575);
+            this.lbContrast.Location = new System.Drawing.Point(60, 761);
             this.lbContrast.Name = "lbContrast";
             this.lbContrast.Size = new System.Drawing.Size(78, 26);
             this.lbContrast.TabIndex = 30;
@@ -194,7 +183,7 @@
             // lbSwitch1
             // 
             this.lbSwitch1.AutoSize = true;
-            this.lbSwitch1.Location = new System.Drawing.Point(510, 575);
+            this.lbSwitch1.Location = new System.Drawing.Point(540, 761);
             this.lbSwitch1.Name = "lbSwitch1";
             this.lbSwitch1.Size = new System.Drawing.Size(112, 26);
             this.lbSwitch1.TabIndex = 31;
@@ -203,7 +192,7 @@
             // lbSwitch2
             // 
             this.lbSwitch2.AutoSize = true;
-            this.lbSwitch2.Location = new System.Drawing.Point(1083, 575);
+            this.lbSwitch2.Location = new System.Drawing.Point(1113, 761);
             this.lbSwitch2.Name = "lbSwitch2";
             this.lbSwitch2.Size = new System.Drawing.Size(112, 26);
             this.lbSwitch2.TabIndex = 32;
@@ -229,7 +218,7 @@
             // 
             // btnConfig
             // 
-            this.btnConfig.Location = new System.Drawing.Point(34, 676);
+            this.btnConfig.Location = new System.Drawing.Point(64, 862);
             this.btnConfig.Name = "btnConfig";
             this.btnConfig.Size = new System.Drawing.Size(175, 61);
             this.btnConfig.TabIndex = 35;
@@ -249,7 +238,7 @@
             // lbThickness1
             // 
             this.lbThickness1.AutoSize = true;
-            this.lbThickness1.Location = new System.Drawing.Point(1302, 111);
+            this.lbThickness1.Location = new System.Drawing.Point(1208, 175);
             this.lbThickness1.Name = "lbThickness1";
             this.lbThickness1.Size = new System.Drawing.Size(56, 26);
             this.lbThickness1.TabIndex = 37;
@@ -271,14 +260,14 @@
             "80",
             "90",
             "100"});
-            this.cbxForce1.Location = new System.Drawing.Point(1040, 148);
+            this.cbxForce1.Location = new System.Drawing.Point(1438, 225);
             this.cbxForce1.Name = "cbxForce1";
             this.cbxForce1.Size = new System.Drawing.Size(121, 33);
             this.cbxForce1.TabIndex = 38;
             // 
             // btnSetForce1
             // 
-            this.btnSetForce1.Location = new System.Drawing.Point(1167, 142);
+            this.btnSetForce1.Location = new System.Drawing.Point(1565, 219);
             this.btnSetForce1.Name = "btnSetForce1";
             this.btnSetForce1.Size = new System.Drawing.Size(103, 45);
             this.btnSetForce1.TabIndex = 39;
@@ -289,7 +278,7 @@
             // pbxThickness1
             // 
             this.pbxThickness1.BackColor = System.Drawing.Color.Gray;
-            this.pbxThickness1.Location = new System.Drawing.Point(1307, 156);
+            this.pbxThickness1.Location = new System.Drawing.Point(1213, 231);
             this.pbxThickness1.Name = "pbxThickness1";
             this.pbxThickness1.Size = new System.Drawing.Size(160, 20);
             this.pbxThickness1.TabIndex = 40;
@@ -298,15 +287,15 @@
             // pbxThickness2
             // 
             this.pbxThickness2.BackColor = System.Drawing.Color.Gray;
-            this.pbxThickness2.Location = new System.Drawing.Point(1307, 277);
+            this.pbxThickness2.Location = new System.Drawing.Point(651, 240);
             this.pbxThickness2.Name = "pbxThickness2";
-            this.pbxThickness2.Size = new System.Drawing.Size(160, 3);
+            this.pbxThickness2.Size = new System.Drawing.Size(160, 6);
             this.pbxThickness2.TabIndex = 50;
             this.pbxThickness2.TabStop = false;
             // 
             // btnSetForce2
             // 
-            this.btnSetForce2.Location = new System.Drawing.Point(1167, 260);
+            this.btnSetForce2.Location = new System.Drawing.Point(1013, 219);
             this.btnSetForce2.Name = "btnSetForce2";
             this.btnSetForce2.Size = new System.Drawing.Size(103, 45);
             this.btnSetForce2.TabIndex = 49;
@@ -330,7 +319,7 @@
             "80",
             "90",
             "100"});
-            this.cbxForce2.Location = new System.Drawing.Point(1040, 266);
+            this.cbxForce2.Location = new System.Drawing.Point(886, 225);
             this.cbxForce2.Name = "cbxForce2";
             this.cbxForce2.Size = new System.Drawing.Size(121, 33);
             this.cbxForce2.TabIndex = 48;
@@ -338,7 +327,7 @@
             // lbThickness2
             // 
             this.lbThickness2.AutoSize = true;
-            this.lbThickness2.Location = new System.Drawing.Point(1302, 232);
+            this.lbThickness2.Location = new System.Drawing.Point(646, 175);
             this.lbThickness2.Name = "lbThickness2";
             this.lbThickness2.Size = new System.Drawing.Size(56, 26);
             this.lbThickness2.TabIndex = 47;
@@ -347,7 +336,7 @@
             // lbForce2
             // 
             this.lbForce2.AutoSize = true;
-            this.lbForce2.Location = new System.Drawing.Point(1037, 232);
+            this.lbForce2.Location = new System.Drawing.Point(900, 175);
             this.lbForce2.Name = "lbForce2";
             this.lbForce2.Size = new System.Drawing.Size(78, 26);
             this.lbForce2.TabIndex = 46;
@@ -356,7 +345,7 @@
             // lbRotation2
             // 
             this.lbRotation2.AutoSize = true;
-            this.lbRotation2.Location = new System.Drawing.Point(636, 232);
+            this.lbRotation2.Location = new System.Drawing.Point(1006, 473);
             this.lbRotation2.Name = "lbRotation2";
             this.lbRotation2.Size = new System.Drawing.Size(56, 26);
             this.lbRotation2.TabIndex = 45;
@@ -365,25 +354,16 @@
             // lbTravel2
             // 
             this.lbTravel2.AutoSize = true;
-            this.lbTravel2.Location = new System.Drawing.Point(124, 232);
+            this.lbTravel2.Location = new System.Drawing.Point(653, 315);
             this.lbTravel2.Name = "lbTravel2";
             this.lbTravel2.Size = new System.Drawing.Size(56, 26);
             this.lbTravel2.TabIndex = 44;
             this.lbTravel2.Text = "位置";
             // 
-            // tbrRotation2
-            // 
-            this.tbrRotation2.Enabled = false;
-            this.tbrRotation2.Location = new System.Drawing.Point(609, 273);
-            this.tbrRotation2.Maximum = 360;
-            this.tbrRotation2.Name = "tbrRotation2";
-            this.tbrRotation2.Size = new System.Drawing.Size(410, 90);
-            this.tbrRotation2.TabIndex = 43;
-            // 
             // lbProbe2
             // 
             this.lbProbe2.AutoSize = true;
-            this.lbProbe2.Location = new System.Drawing.Point(30, 266);
+            this.lbProbe2.Location = new System.Drawing.Point(800, 121);
             this.lbProbe2.Name = "lbProbe2";
             this.lbProbe2.Size = new System.Drawing.Size(68, 26);
             this.lbProbe2.TabIndex = 42;
@@ -392,9 +372,8 @@
             // tbrTravel2
             // 
             this.tbrTravel2.Enabled = false;
-            this.tbrTravel2.Location = new System.Drawing.Point(117, 273);
-            this.tbrTravel2.Maximum = 10000;
-            this.tbrTravel2.Minimum = -10000;
+            this.tbrTravel2.Location = new System.Drawing.Point(645, 371);
+            this.tbrTravel2.Maximum = 3000;
             this.tbrTravel2.Name = "tbrTravel2";
             this.tbrTravel2.Size = new System.Drawing.Size(505, 90);
             this.tbrTravel2.TabIndex = 41;
@@ -402,15 +381,15 @@
             // pbxThickness3
             // 
             this.pbxThickness3.BackColor = System.Drawing.Color.Gray;
-            this.pbxThickness3.Location = new System.Drawing.Point(1307, 404);
+            this.pbxThickness3.Location = new System.Drawing.Point(53, 237);
             this.pbxThickness3.Name = "pbxThickness3";
-            this.pbxThickness3.Size = new System.Drawing.Size(160, 8);
+            this.pbxThickness3.Size = new System.Drawing.Size(160, 10);
             this.pbxThickness3.TabIndex = 60;
             this.pbxThickness3.TabStop = false;
             // 
             // btnSetForce3
             // 
-            this.btnSetForce3.Location = new System.Drawing.Point(1167, 387);
+            this.btnSetForce3.Location = new System.Drawing.Point(431, 219);
             this.btnSetForce3.Name = "btnSetForce3";
             this.btnSetForce3.Size = new System.Drawing.Size(103, 45);
             this.btnSetForce3.TabIndex = 59;
@@ -434,7 +413,7 @@
             "80",
             "90",
             "100"});
-            this.cbxForce3.Location = new System.Drawing.Point(1040, 393);
+            this.cbxForce3.Location = new System.Drawing.Point(304, 225);
             this.cbxForce3.Name = "cbxForce3";
             this.cbxForce3.Size = new System.Drawing.Size(121, 33);
             this.cbxForce3.TabIndex = 58;
@@ -442,7 +421,7 @@
             // lbThickness3
             // 
             this.lbThickness3.AutoSize = true;
-            this.lbThickness3.Location = new System.Drawing.Point(1302, 359);
+            this.lbThickness3.Location = new System.Drawing.Point(48, 175);
             this.lbThickness3.Name = "lbThickness3";
             this.lbThickness3.Size = new System.Drawing.Size(56, 26);
             this.lbThickness3.TabIndex = 57;
@@ -451,7 +430,7 @@
             // lbForce3
             // 
             this.lbForce3.AutoSize = true;
-            this.lbForce3.Location = new System.Drawing.Point(1042, 358);
+            this.lbForce3.Location = new System.Drawing.Point(339, 175);
             this.lbForce3.Name = "lbForce3";
             this.lbForce3.Size = new System.Drawing.Size(78, 26);
             this.lbForce3.TabIndex = 56;
@@ -460,7 +439,7 @@
             // lbRotation3
             // 
             this.lbRotation3.AutoSize = true;
-            this.lbRotation3.Location = new System.Drawing.Point(636, 359);
+            this.lbRotation3.Location = new System.Drawing.Point(411, 473);
             this.lbRotation3.Name = "lbRotation3";
             this.lbRotation3.Size = new System.Drawing.Size(56, 26);
             this.lbRotation3.TabIndex = 55;
@@ -469,25 +448,16 @@
             // lbTravel3
             // 
             this.lbTravel3.AutoSize = true;
-            this.lbTravel3.Location = new System.Drawing.Point(124, 359);
+            this.lbTravel3.Location = new System.Drawing.Point(46, 315);
             this.lbTravel3.Name = "lbTravel3";
             this.lbTravel3.Size = new System.Drawing.Size(56, 26);
             this.lbTravel3.TabIndex = 54;
             this.lbTravel3.Text = "位置";
             // 
-            // tbrRotation3
-            // 
-            this.tbrRotation3.Enabled = false;
-            this.tbrRotation3.Location = new System.Drawing.Point(609, 393);
-            this.tbrRotation3.Maximum = 360;
-            this.tbrRotation3.Name = "tbrRotation3";
-            this.tbrRotation3.Size = new System.Drawing.Size(410, 90);
-            this.tbrRotation3.TabIndex = 53;
-            // 
             // lbProbe3
             // 
             this.lbProbe3.AutoSize = true;
-            this.lbProbe3.Location = new System.Drawing.Point(30, 393);
+            this.lbProbe3.Location = new System.Drawing.Point(283, 121);
             this.lbProbe3.Name = "lbProbe3";
             this.lbProbe3.Size = new System.Drawing.Size(68, 26);
             this.lbProbe3.TabIndex = 52;
@@ -496,9 +466,8 @@
             // tbrTravel3
             // 
             this.tbrTravel3.Enabled = false;
-            this.tbrTravel3.Location = new System.Drawing.Point(117, 393);
-            this.tbrTravel3.Maximum = 10000;
-            this.tbrTravel3.Minimum = -10000;
+            this.tbrTravel3.Location = new System.Drawing.Point(38, 371);
+            this.tbrTravel3.Maximum = 3000;
             this.tbrTravel3.Name = "tbrTravel3";
             this.tbrTravel3.Size = new System.Drawing.Size(505, 90);
             this.tbrTravel3.TabIndex = 51;
@@ -506,7 +475,7 @@
             // pbxContrast
             // 
             this.pbxContrast.BackColor = System.Drawing.Color.Gray;
-            this.pbxContrast.Location = new System.Drawing.Point(123, 569);
+            this.pbxContrast.Location = new System.Drawing.Point(153, 755);
             this.pbxContrast.Name = "pbxContrast";
             this.pbxContrast.Size = new System.Drawing.Size(76, 36);
             this.pbxContrast.TabIndex = 61;
@@ -515,7 +484,7 @@
             // pbxSwitch1
             // 
             this.pbxSwitch1.BackColor = System.Drawing.Color.Gray;
-            this.pbxSwitch1.Location = new System.Drawing.Point(641, 569);
+            this.pbxSwitch1.Location = new System.Drawing.Point(671, 755);
             this.pbxSwitch1.Name = "pbxSwitch1";
             this.pbxSwitch1.Size = new System.Drawing.Size(76, 36);
             this.pbxSwitch1.TabIndex = 62;
@@ -524,7 +493,7 @@
             // pbxSwitch2
             // 
             this.pbxSwitch2.BackColor = System.Drawing.Color.Gray;
-            this.pbxSwitch2.Location = new System.Drawing.Point(1215, 569);
+            this.pbxSwitch2.Location = new System.Drawing.Point(1245, 755);
             this.pbxSwitch2.Name = "pbxSwitch2";
             this.pbxSwitch2.Size = new System.Drawing.Size(76, 36);
             this.pbxSwitch2.TabIndex = 63;
@@ -533,7 +502,7 @@
             // lbPressure
             // 
             this.lbPressure.AutoSize = true;
-            this.lbPressure.Location = new System.Drawing.Point(29, 485);
+            this.lbPressure.Location = new System.Drawing.Point(59, 671);
             this.lbPressure.Name = "lbPressure";
             this.lbPressure.Size = new System.Drawing.Size(78, 26);
             this.lbPressure.TabIndex = 64;
@@ -542,7 +511,7 @@
             // lbPressureValue
             // 
             this.lbPressureValue.AutoSize = true;
-            this.lbPressureValue.Location = new System.Drawing.Point(1042, 486);
+            this.lbPressureValue.Location = new System.Drawing.Point(1072, 672);
             this.lbPressureValue.Name = "lbPressureValue";
             this.lbPressureValue.Size = new System.Drawing.Size(49, 26);
             this.lbPressureValue.TabIndex = 65;
@@ -551,7 +520,7 @@
             // lbPressureUnit
             // 
             this.lbPressureUnit.AutoSize = true;
-            this.lbPressureUnit.Location = new System.Drawing.Point(1188, 486);
+            this.lbPressureUnit.Location = new System.Drawing.Point(1218, 672);
             this.lbPressureUnit.Name = "lbPressureUnit";
             this.lbPressureUnit.Size = new System.Drawing.Size(126, 26);
             this.lbPressureUnit.TabIndex = 66;
@@ -559,7 +528,7 @@
             // 
             // btnZeroTravel1
             // 
-            this.btnZeroTravel1.Location = new System.Drawing.Point(500, 101);
+            this.btnZeroTravel1.Location = new System.Drawing.Point(1584, 306);
             this.btnZeroTravel1.Name = "btnZeroTravel1";
             this.btnZeroTravel1.Size = new System.Drawing.Size(103, 45);
             this.btnZeroTravel1.TabIndex = 68;
@@ -569,7 +538,7 @@
             // 
             // btnZeroRotation1
             // 
-            this.btnZeroRotation1.Location = new System.Drawing.Point(904, 101);
+            this.btnZeroRotation1.Location = new System.Drawing.Point(1565, 540);
             this.btnZeroRotation1.Name = "btnZeroRotation1";
             this.btnZeroRotation1.Size = new System.Drawing.Size(103, 45);
             this.btnZeroRotation1.TabIndex = 69;
@@ -579,7 +548,7 @@
             // 
             // btnZeroRotation2
             // 
-            this.btnZeroRotation2.Location = new System.Drawing.Point(904, 222);
+            this.btnZeroRotation2.Location = new System.Drawing.Point(1013, 540);
             this.btnZeroRotation2.Name = "btnZeroRotation2";
             this.btnZeroRotation2.Size = new System.Drawing.Size(103, 45);
             this.btnZeroRotation2.TabIndex = 71;
@@ -589,7 +558,7 @@
             // 
             // btnZeroTravel2
             // 
-            this.btnZeroTravel2.Location = new System.Drawing.Point(500, 222);
+            this.btnZeroTravel2.Location = new System.Drawing.Point(1029, 306);
             this.btnZeroTravel2.Name = "btnZeroTravel2";
             this.btnZeroTravel2.Size = new System.Drawing.Size(103, 45);
             this.btnZeroTravel2.TabIndex = 70;
@@ -599,7 +568,7 @@
             // 
             // btnZeroRotation3
             // 
-            this.btnZeroRotation3.Location = new System.Drawing.Point(904, 349);
+            this.btnZeroRotation3.Location = new System.Drawing.Point(418, 540);
             this.btnZeroRotation3.Name = "btnZeroRotation3";
             this.btnZeroRotation3.Size = new System.Drawing.Size(103, 45);
             this.btnZeroRotation3.TabIndex = 73;
@@ -609,7 +578,7 @@
             // 
             // btnZeroTravel3
             // 
-            this.btnZeroTravel3.Location = new System.Drawing.Point(500, 349);
+            this.btnZeroTravel3.Location = new System.Drawing.Point(431, 306);
             this.btnZeroTravel3.Name = "btnZeroTravel3";
             this.btnZeroTravel3.Size = new System.Drawing.Size(103, 45);
             this.btnZeroTravel3.TabIndex = 72;
@@ -626,7 +595,7 @@
             // lbTravelValue1
             // 
             this.lbTravelValue1.AutoSize = true;
-            this.lbTravelValue1.Location = new System.Drawing.Point(188, 111);
+            this.lbTravelValue1.Location = new System.Drawing.Point(1272, 315);
             this.lbTravelValue1.Name = "lbTravelValue1";
             this.lbTravelValue1.Size = new System.Drawing.Size(49, 26);
             this.lbTravelValue1.TabIndex = 74;
@@ -635,7 +604,7 @@
             // lbRotationValue1
             // 
             this.lbRotationValue1.AutoSize = true;
-            this.lbRotationValue1.Location = new System.Drawing.Point(699, 111);
+            this.lbRotationValue1.Location = new System.Drawing.Point(1626, 473);
             this.lbRotationValue1.Name = "lbRotationValue1";
             this.lbRotationValue1.Size = new System.Drawing.Size(49, 26);
             this.lbRotationValue1.TabIndex = 75;
@@ -644,7 +613,7 @@
             // lbTravelValue2
             // 
             this.lbTravelValue2.AutoSize = true;
-            this.lbTravelValue2.Location = new System.Drawing.Point(188, 232);
+            this.lbTravelValue2.Location = new System.Drawing.Point(717, 315);
             this.lbTravelValue2.Name = "lbTravelValue2";
             this.lbTravelValue2.Size = new System.Drawing.Size(49, 26);
             this.lbTravelValue2.TabIndex = 76;
@@ -653,7 +622,7 @@
             // lbRotationValue2
             // 
             this.lbRotationValue2.AutoSize = true;
-            this.lbRotationValue2.Location = new System.Drawing.Point(697, 232);
+            this.lbRotationValue2.Location = new System.Drawing.Point(1067, 473);
             this.lbRotationValue2.Name = "lbRotationValue2";
             this.lbRotationValue2.Size = new System.Drawing.Size(49, 26);
             this.lbRotationValue2.TabIndex = 77;
@@ -662,7 +631,7 @@
             // lbRotationValue3
             // 
             this.lbRotationValue3.AutoSize = true;
-            this.lbRotationValue3.Location = new System.Drawing.Point(697, 359);
+            this.lbRotationValue3.Location = new System.Drawing.Point(472, 473);
             this.lbRotationValue3.Name = "lbRotationValue3";
             this.lbRotationValue3.Size = new System.Drawing.Size(49, 26);
             this.lbRotationValue3.TabIndex = 78;
@@ -671,7 +640,7 @@
             // lbTravelValue3
             // 
             this.lbTravelValue3.AutoSize = true;
-            this.lbTravelValue3.Location = new System.Drawing.Point(188, 359);
+            this.lbTravelValue3.Location = new System.Drawing.Point(110, 315);
             this.lbTravelValue3.Name = "lbTravelValue3";
             this.lbTravelValue3.Size = new System.Drawing.Size(49, 26);
             this.lbTravelValue3.TabIndex = 79;
@@ -680,16 +649,17 @@
             // lbForceValue1
             // 
             this.lbForceValue1.AutoSize = true;
-            this.lbForceValue1.Location = new System.Drawing.Point(1129, 111);
+            this.lbForceValue1.Location = new System.Drawing.Point(1561, 175);
             this.lbForceValue1.Name = "lbForceValue1";
             this.lbForceValue1.Size = new System.Drawing.Size(49, 26);
             this.lbForceValue1.TabIndex = 80;
             this.lbForceValue1.Text = "N/A";
+            this.lbForceValue1.Click += new System.EventHandler(this.lbForceValue1_Click);
             // 
             // lbForceValue2
             // 
             this.lbForceValue2.AutoSize = true;
-            this.lbForceValue2.Location = new System.Drawing.Point(1129, 231);
+            this.lbForceValue2.Location = new System.Drawing.Point(1008, 175);
             this.lbForceValue2.Name = "lbForceValue2";
             this.lbForceValue2.Size = new System.Drawing.Size(49, 26);
             this.lbForceValue2.TabIndex = 81;
@@ -698,7 +668,7 @@
             // lbForceValue3
             // 
             this.lbForceValue3.AutoSize = true;
-            this.lbForceValue3.Location = new System.Drawing.Point(1129, 358);
+            this.lbForceValue3.Location = new System.Drawing.Point(426, 175);
             this.lbForceValue3.Name = "lbForceValue3";
             this.lbForceValue3.Size = new System.Drawing.Size(49, 26);
             this.lbForceValue3.TabIndex = 82;
@@ -707,7 +677,7 @@
             // lbThicknessValue1
             // 
             this.lbThicknessValue1.AutoSize = true;
-            this.lbThicknessValue1.Location = new System.Drawing.Point(1390, 111);
+            this.lbThicknessValue1.Location = new System.Drawing.Point(1296, 175);
             this.lbThicknessValue1.Name = "lbThicknessValue1";
             this.lbThicknessValue1.Size = new System.Drawing.Size(49, 26);
             this.lbThicknessValue1.TabIndex = 83;
@@ -716,7 +686,7 @@
             // lbThicknessValue2
             // 
             this.lbThicknessValue2.AutoSize = true;
-            this.lbThicknessValue2.Location = new System.Drawing.Point(1390, 232);
+            this.lbThicknessValue2.Location = new System.Drawing.Point(734, 175);
             this.lbThicknessValue2.Name = "lbThicknessValue2";
             this.lbThicknessValue2.Size = new System.Drawing.Size(49, 26);
             this.lbThicknessValue2.TabIndex = 84;
@@ -725,18 +695,117 @@
             // lbThicknessValue3
             // 
             this.lbThicknessValue3.AutoSize = true;
-            this.lbThicknessValue3.Location = new System.Drawing.Point(1390, 358);
+            this.lbThicknessValue3.Location = new System.Drawing.Point(136, 175);
             this.lbThicknessValue3.Name = "lbThicknessValue3";
             this.lbThicknessValue3.Size = new System.Drawing.Size(49, 26);
             this.lbThicknessValue3.TabIndex = 85;
             this.lbThicknessValue3.Text = "N/A";
+            // 
+            // cpbRotation1
+            // 
+            this.cpbRotation1.AnimationFunction = WinFormAnimation.KnownAnimationFunctions.Liner;
+            this.cpbRotation1.AnimationSpeed = 0;
+            this.cpbRotation1.BackColor = System.Drawing.Color.Transparent;
+            this.cpbRotation1.Font = new System.Drawing.Font("Microsoft Sans Serif", 72F, System.Drawing.FontStyle.Bold);
+            this.cpbRotation1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.cpbRotation1.InnerColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.cpbRotation1.InnerMargin = 2;
+            this.cpbRotation1.InnerWidth = -1;
+            this.cpbRotation1.Location = new System.Drawing.Point(1213, 455);
+            this.cpbRotation1.MarqueeAnimationSpeed = 2000;
+            this.cpbRotation1.Maximum = 360;
+            this.cpbRotation1.Name = "cpbRotation1";
+            this.cpbRotation1.OuterColor = System.Drawing.Color.DarkGray;
+            this.cpbRotation1.OuterMargin = -25;
+            this.cpbRotation1.OuterWidth = 26;
+            this.cpbRotation1.ProgressColor = System.Drawing.Color.Green;
+            this.cpbRotation1.ProgressWidth = 10;
+            this.cpbRotation1.SecondaryFont = new System.Drawing.Font("Microsoft Sans Serif", 36F);
+            this.cpbRotation1.Size = new System.Drawing.Size(150, 150);
+            this.cpbRotation1.StartAngle = 270;
+            this.cpbRotation1.SubscriptColor = System.Drawing.Color.FromArgb(((int)(((byte)(166)))), ((int)(((byte)(166)))), ((int)(((byte)(166)))));
+            this.cpbRotation1.SubscriptMargin = new System.Windows.Forms.Padding(10, -35, 0, 0);
+            this.cpbRotation1.SubscriptText = ".23";
+            this.cpbRotation1.SuperscriptColor = System.Drawing.Color.FromArgb(((int)(((byte)(166)))), ((int)(((byte)(166)))), ((int)(((byte)(166)))));
+            this.cpbRotation1.SuperscriptMargin = new System.Windows.Forms.Padding(10, 35, 0, 0);
+            this.cpbRotation1.SuperscriptText = "°C";
+            this.cpbRotation1.TabIndex = 86;
+            this.cpbRotation1.TextMargin = new System.Windows.Forms.Padding(8, 8, 0, 0);
+            this.cpbRotation1.Value = 68;
+            // 
+            // cpbRotation2
+            // 
+            this.cpbRotation2.AnimationFunction = WinFormAnimation.KnownAnimationFunctions.Liner;
+            this.cpbRotation2.AnimationSpeed = 0;
+            this.cpbRotation2.BackColor = System.Drawing.Color.Transparent;
+            this.cpbRotation2.Font = new System.Drawing.Font("Microsoft Sans Serif", 72F, System.Drawing.FontStyle.Bold);
+            this.cpbRotation2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.cpbRotation2.InnerColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.cpbRotation2.InnerMargin = 2;
+            this.cpbRotation2.InnerWidth = -1;
+            this.cpbRotation2.Location = new System.Drawing.Point(655, 455);
+            this.cpbRotation2.MarqueeAnimationSpeed = 2000;
+            this.cpbRotation2.Maximum = 360;
+            this.cpbRotation2.Name = "cpbRotation2";
+            this.cpbRotation2.OuterColor = System.Drawing.Color.DarkGray;
+            this.cpbRotation2.OuterMargin = -25;
+            this.cpbRotation2.OuterWidth = 26;
+            this.cpbRotation2.ProgressColor = System.Drawing.Color.Green;
+            this.cpbRotation2.ProgressWidth = 10;
+            this.cpbRotation2.SecondaryFont = new System.Drawing.Font("Microsoft Sans Serif", 36F);
+            this.cpbRotation2.Size = new System.Drawing.Size(150, 150);
+            this.cpbRotation2.StartAngle = 270;
+            this.cpbRotation2.SubscriptColor = System.Drawing.Color.FromArgb(((int)(((byte)(166)))), ((int)(((byte)(166)))), ((int)(((byte)(166)))));
+            this.cpbRotation2.SubscriptMargin = new System.Windows.Forms.Padding(10, -35, 0, 0);
+            this.cpbRotation2.SubscriptText = ".23";
+            this.cpbRotation2.SuperscriptColor = System.Drawing.Color.FromArgb(((int)(((byte)(166)))), ((int)(((byte)(166)))), ((int)(((byte)(166)))));
+            this.cpbRotation2.SuperscriptMargin = new System.Windows.Forms.Padding(10, 35, 0, 0);
+            this.cpbRotation2.SuperscriptText = "°C";
+            this.cpbRotation2.TabIndex = 88;
+            this.cpbRotation2.TextMargin = new System.Windows.Forms.Padding(8, 8, 0, 0);
+            this.cpbRotation2.Value = 68;
+            // 
+            // cpbRotation3
+            // 
+            this.cpbRotation3.AnimationFunction = WinFormAnimation.KnownAnimationFunctions.Liner;
+            this.cpbRotation3.AnimationSpeed = 0;
+            this.cpbRotation3.BackColor = System.Drawing.Color.Transparent;
+            this.cpbRotation3.Font = new System.Drawing.Font("Microsoft Sans Serif", 72F, System.Drawing.FontStyle.Bold);
+            this.cpbRotation3.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.cpbRotation3.InnerColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.cpbRotation3.InnerMargin = 2;
+            this.cpbRotation3.InnerWidth = -1;
+            this.cpbRotation3.Location = new System.Drawing.Point(38, 455);
+            this.cpbRotation3.MarqueeAnimationSpeed = 2000;
+            this.cpbRotation3.Maximum = 360;
+            this.cpbRotation3.Name = "cpbRotation3";
+            this.cpbRotation3.OuterColor = System.Drawing.Color.DarkGray;
+            this.cpbRotation3.OuterMargin = -25;
+            this.cpbRotation3.OuterWidth = 26;
+            this.cpbRotation3.ProgressColor = System.Drawing.Color.Green;
+            this.cpbRotation3.ProgressWidth = 10;
+            this.cpbRotation3.SecondaryFont = new System.Drawing.Font("Microsoft Sans Serif", 36F);
+            this.cpbRotation3.Size = new System.Drawing.Size(150, 150);
+            this.cpbRotation3.StartAngle = 270;
+            this.cpbRotation3.SubscriptColor = System.Drawing.Color.FromArgb(((int)(((byte)(166)))), ((int)(((byte)(166)))), ((int)(((byte)(166)))));
+            this.cpbRotation3.SubscriptMargin = new System.Windows.Forms.Padding(10, -35, 0, 0);
+            this.cpbRotation3.SubscriptText = ".23";
+            this.cpbRotation3.SuperscriptColor = System.Drawing.Color.FromArgb(((int)(((byte)(166)))), ((int)(((byte)(166)))), ((int)(((byte)(166)))));
+            this.cpbRotation3.SuperscriptMargin = new System.Windows.Forms.Padding(10, 35, 0, 0);
+            this.cpbRotation3.SuperscriptText = "°C";
+            this.cpbRotation3.TabIndex = 89;
+            this.cpbRotation3.TextMargin = new System.Windows.Forms.Padding(8, 8, 0, 0);
+            this.cpbRotation3.Value = 68;
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
-            this.ClientSize = new System.Drawing.Size(1628, 771);
+            this.ClientSize = new System.Drawing.Size(1744, 973);
+            this.Controls.Add(this.cpbRotation3);
+            this.Controls.Add(this.cpbRotation2);
+            this.Controls.Add(this.cpbRotation1);
             this.Controls.Add(this.lbThicknessValue3);
             this.Controls.Add(this.lbThicknessValue2);
             this.Controls.Add(this.lbThicknessValue1);
@@ -768,7 +837,6 @@
             this.Controls.Add(this.lbForce3);
             this.Controls.Add(this.lbRotation3);
             this.Controls.Add(this.lbTravel3);
-            this.Controls.Add(this.tbrRotation3);
             this.Controls.Add(this.lbProbe3);
             this.Controls.Add(this.tbrTravel3);
             this.Controls.Add(this.pbxThickness2);
@@ -778,7 +846,6 @@
             this.Controls.Add(this.lbForce2);
             this.Controls.Add(this.lbRotation2);
             this.Controls.Add(this.lbTravel2);
-            this.Controls.Add(this.tbrRotation2);
             this.Controls.Add(this.lbProbe2);
             this.Controls.Add(this.tbrTravel2);
             this.Controls.Add(this.pbxThickness1);
@@ -795,7 +862,6 @@
             this.Controls.Add(this.lbForce1);
             this.Controls.Add(this.lbRotation1);
             this.Controls.Add(this.lbTravel1);
-            this.Controls.Add(this.tbrRotation1);
             this.Controls.Add(this.lbProbe1);
             this.Controls.Add(this.pbrPressure);
             this.Controls.Add(this.tbrTravel1);
@@ -807,14 +873,11 @@
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainForm_FormClosed);
             this.Load += new System.EventHandler(this.MainForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.tbrTravel1)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.tbrRotation1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbxSerialStatus)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbxThickness1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbxThickness2)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.tbrRotation2)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.tbrTravel2)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbxThickness3)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.tbrRotation3)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.tbrTravel3)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbxContrast)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbxSwitch1)).EndInit();
@@ -830,7 +893,6 @@
         private System.Windows.Forms.ProgressBar pbrPressure;
         private System.Windows.Forms.TrackBar tbrTravel1;
         private System.Windows.Forms.Label lbProbe1;
-        private System.Windows.Forms.TrackBar tbrRotation1;
         private System.Windows.Forms.Label lbTravel1;
         private System.Windows.Forms.Label lbRotation1;
         private System.Windows.Forms.Label lbForce1;
@@ -852,7 +914,6 @@
         private System.Windows.Forms.Label lbForce2;
         private System.Windows.Forms.Label lbRotation2;
         private System.Windows.Forms.Label lbTravel2;
-        private System.Windows.Forms.TrackBar tbrRotation2;
         private System.Windows.Forms.Label lbProbe2;
         private System.Windows.Forms.TrackBar tbrTravel2;
         private System.Windows.Forms.PictureBox pbxThickness3;
@@ -862,7 +923,6 @@
         private System.Windows.Forms.Label lbForce3;
         private System.Windows.Forms.Label lbRotation3;
         private System.Windows.Forms.Label lbTravel3;
-        private System.Windows.Forms.TrackBar tbrRotation3;
         private System.Windows.Forms.Label lbProbe3;
         private System.Windows.Forms.TrackBar tbrTravel3;
         private System.Windows.Forms.PictureBox pbxContrast;
@@ -890,6 +950,10 @@
         private System.Windows.Forms.Label lbThicknessValue1;
         private System.Windows.Forms.Label lbThicknessValue2;
         private System.Windows.Forms.Label lbThicknessValue3;
+        private CircularProgressBar.CircularProgressBar cpbRotation1;
+        private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        private CircularProgressBar.CircularProgressBar cpbRotation2;
+        private CircularProgressBar.CircularProgressBar cpbRotation3;
     }
 }
 

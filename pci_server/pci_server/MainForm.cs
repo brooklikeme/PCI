@@ -16,12 +16,12 @@ namespace pci_server
     {
         int NumberOfMouses;
         bool IsActive = false;
-        long test = 0;
+        List<bool> detectList = new List<bool>();
         List<double> diameterList = new List<double>();
         List<Label> travelLabelList = new List<Label>();
         List<Label> rotationLabelList = new List<Label>();
         List<TrackBar> travelBarList = new List<TrackBar>();
-        List<TrackBar> rotationBarList = new List<TrackBar>();
+        List<CircularProgressBar.CircularProgressBar> rotationBarList = new List<CircularProgressBar.CircularProgressBar>();
 
         private int portCountDown = 0;
         private string portErrorMessage = "";
@@ -33,20 +33,17 @@ namespace pci_server
 
         private void m_MouseMoved(object sender, RawInput.MouseMoveEventArgs e)
         {
-            if (e.Mouse.probeIndex > 0 && e.Mouse.probeIndex < 4)
+            if (IsActive && e.Mouse.probeIndex > 0 && e.Mouse.probeIndex < 4 && detectList[e.Mouse.probeIndex - 1])
             {
                 double yTravel = e.Mouse.cumulativeY * 1.0 / 24;
-                int yTravelInt = (int)(yTravel * 10);
+                int yTravelInt = (int)(yTravel * 10) % 3000;
                 double xTravel = e.Mouse.cumulativeX * 1.0 / 24;
-                int xAngle = (int)((xTravel * 360) / (3.14 * diameterList[e.Mouse.probeIndex - 1])) % 360;
+                int xAngle = (int)((xTravel * 360) / (6.28 * diameterList[e.Mouse.probeIndex - 1])) % 360;
                 xAngle = xAngle < 0 ? xAngle + 360 : xAngle;
+                yTravelInt = yTravelInt < 0 ? yTravelInt + 3000 : yTravelInt;
                 travelLabelList[e.Mouse.probeIndex - 1].Text = Math.Round(yTravel, 1).ToString() + " / " + e.Mouse.cumulativeY.ToString();
                 rotationLabelList[e.Mouse.probeIndex - 1].Text = xAngle.ToString() + " / " + e.Mouse.cumulativeX.ToString();
-                if (Math.Abs(yTravelInt) > travelBarList[e.Mouse.probeIndex - 1].Maximum) {
-                    travelBarList[e.Mouse.probeIndex - 1].Maximum += travelBarList[e.Mouse.probeIndex - 1].Maximum;
-                    travelBarList[e.Mouse.probeIndex - 1].Minimum = 0 - travelBarList[e.Mouse.probeIndex - 1].Maximum;
-                }
-                travelBarList[e.Mouse.probeIndex - 1].Value = yTravelInt;
+                travelBarList[e.Mouse.probeIndex - 1].Value = yTravelInt % 3000;
                 rotationBarList[e.Mouse.probeIndex - 1].Value = xAngle;
             }
         }
@@ -79,6 +76,10 @@ namespace pci_server
             // load config
             PCIConfig.LoadBaseConfig();
 
+            detectList.Add(false);
+            detectList.Add(false);
+            detectList.Add(false);
+
             // fill components
             travelLabelList.Add(lbTravelValue1);
             travelLabelList.Add(lbTravelValue2);
@@ -92,9 +93,9 @@ namespace pci_server
             travelBarList.Add(tbrTravel2);
             travelBarList.Add(tbrTravel3);
 
-            rotationBarList.Add(tbrRotation1);
-            rotationBarList.Add(tbrRotation2);
-            rotationBarList.Add(tbrRotation3);
+            rotationBarList.Add(cpbRotation1);
+            rotationBarList.Add(cpbRotation2);
+            rotationBarList.Add(cpbRotation3);
 
             cbxForce1.SelectedIndex = 0;
             cbxForce2.SelectedIndex = 0;
@@ -146,9 +147,44 @@ namespace pci_server
                     diameterList[1] = USBSerial.map(deviceData.hall_value2, USBSerial.advConfig.min_hall_value2, USBSerial.advConfig.max_hall_value2, USBSerial.advConfig.min_hall_diam2, USBSerial.advConfig.max_hall_diam2) / 10.0;
                     diameterList[2] = USBSerial.map(deviceData.hall_value3, USBSerial.advConfig.min_hall_value3, USBSerial.advConfig.max_hall_value3, USBSerial.advConfig.min_hall_diam3, USBSerial.advConfig.max_hall_diam3) / 10.0;
 
-                    pbxThickness1.BackColor = diameterList[0] > 1 ? Color.Green : Color.Gray;
-                    pbxThickness2.BackColor = diameterList[1] > 0.2 ? Color.Green : Color.Gray;
-                    pbxThickness3.BackColor = diameterList[2] > 0.5 ? Color.Green : Color.Gray;
+                    detectList[0] = diameterList[0] > 1.3;
+                    detectList[1] = diameterList[1] > 0.2 && diameterList[1] < 0.6;
+                    detectList[2] = diameterList[2] > 0.6;
+
+                    // pbxThickness1.BackColor = detectList[0] ? Color.Green : Color.Gray;
+                    // pbxThickness2.BackColor = detectList[1] ? Color.Green : Color.Gray;
+                    // pbxThickness3.BackColor = detectList[2] ? Color.Green : Color.Gray;
+
+                    if (detectList[0])
+                    {
+                        pbxThickness1.BackColor = Color.Green;
+                    }
+                    else
+                    {
+                        pbxThickness1.BackColor = Color.Gray;
+                        tbrTravel1.Value = 0;
+                        cpbRotation1.Value = 0;
+                    }
+                    if (detectList[1])
+                    {
+                        pbxThickness2.BackColor = Color.Green;
+                    }
+                    else
+                    {
+                        pbxThickness2.BackColor = Color.Gray;
+                        tbrTravel2.Value = 0;
+                        cpbRotation2.Value = 0;
+                    }
+                    if (detectList[2])
+                    {
+                        pbxThickness3.BackColor = Color.Green;
+                    }
+                    else
+                    {
+                        pbxThickness3.BackColor = Color.Gray;
+                        tbrTravel3.Value = 0;
+                        cpbRotation3.Value = 0;
+                    }
 
                     lbThicknessValue1.Text = Math.Round(diameterList[0], 1).ToString();
                     lbThicknessValue2.Text = Math.Round(diameterList[1], 1).ToString();
@@ -166,31 +202,37 @@ namespace pci_server
         private void btnZeroTravel1_Click(object sender, EventArgs e)
         {
             Global.MouseInput.ZeroCumulativeY(1);
+            tbrTravel1.Value = 0;
         }
 
         private void btnZeroTravel2_Click(object sender, EventArgs e)
         {
             Global.MouseInput.ZeroCumulativeY(2);
+            tbrTravel2.Value = 0;
         }
 
         private void btnZeroTravel3_Click(object sender, EventArgs e)
         {
             Global.MouseInput.ZeroCumulativeY(3);
+            tbrTravel3.Value = 0;
         }
 
         private void btnZeroRotation1_Click(object sender, EventArgs e)
         {
             Global.MouseInput.ZeroCumulativeX(1);
+            cpbRotation1.Value = 0;
         }
 
         private void btnZeroRotation2_Click(object sender, EventArgs e)
         {
             Global.MouseInput.ZeroCumulativeX(2);
+            cpbRotation2.Value = 0;
         }
 
         private void btnZeroRotation3_Click(object sender, EventArgs e)
         {
             Global.MouseInput.ZeroCumulativeX(3);
+            cpbRotation3.Value = 0;
         }
 
         private void MainForm_Activated(object sender, EventArgs e)
@@ -308,6 +350,20 @@ namespace pci_server
                 int force = Int32.Parse(cbxForce3.GetItemText(cbxForce3.SelectedItem));
                 USBSerial.SetServoAngle(2, (int)USBSerial.map(force, 0, 100, USBSerial.advConfig.min_servo_angle3, USBSerial.advConfig.max_servo_angle3));
             }
+        }
+
+        private void button1_Click(object sender, EventArgs e)
+        {
+        }
+
+        private void lbForce1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void lbForceValue1_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

@@ -733,6 +733,10 @@
             this.cpbRotation1.TextMargin = new System.Windows.Forms.Padding(8, 8, 0, 0);
             this.cpbRotation1.Value = 68;
             // 
+            // backgroundWorker1
+            // 
+            this.backgroundWorker1.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker1_DoWork);
+            // 
             // cpbRotation2
             // 
             this.cpbRotation2.AnimationFunction = WinFormAnimation.KnownAnimationFunctions.Liner;

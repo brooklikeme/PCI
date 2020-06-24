@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Runtime.InteropServices;
+using System.Threading;
 
 
 namespace pci_server
@@ -25,6 +27,56 @@ namespace pci_server
 
         private int portCountDown = 0;
         private string portErrorMessage = "";
+
+        const int INVALID_HANDLE_VALUE = -1;
+        const int PAGE_READWRITE = 0x04;
+        private IntPtr smHandle;     //文件句柄
+        private IntPtr smAddr;       //共享内存地址
+        private SharedMemeryData smData;
+        private int sharedMemoryInterval = 100;
+        private int sharedMemoryLastTime = DateTime.Now.Millisecond; 
+        private uint smLength = 1000;
+        private Mutex smMutex;
+
+        [DllImport("User32.dll")]
+        private static extern bool ShowWindowAsync(IntPtr hWnd, int cmdShow);
+        [DllImport("User32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        //共享内存
+        [DllImport("Kernel32.dll", EntryPoint = "CreateFileMapping")]
+        private static extern IntPtr CreateFileMapping(IntPtr hFile, //HANDLE hFile,
+            UInt32 lpAttributes,//LPSECURITY_ATTRIBUTES lpAttributes,  //0
+            UInt32 flProtect,//DWORD flProtect
+            Int32 dwMaximumSizeHigh,//DWORD dwMaximumSizeHigh,
+            UInt32 dwMaximumSizeLow,//DWORD dwMaximumSizeLow,
+            string lpName//LPCTSTR lpName
+         );
+
+        [DllImport("Kernel32.dll", EntryPoint = "OpenFileMapping")]
+        private static extern IntPtr OpenFileMapping(
+         UInt32 dwDesiredAccess,//DWORD dwDesiredAccess,
+         int bInheritHandle,//BOOL bInheritHandle,
+         string lpName//LPCTSTR lpName
+         );
+
+        const int FILE_MAP_ALL_ACCESS = 0x0002;
+        const int FILE_MAP_WRITE = 0x0002;
+
+        [DllImport("Kernel32.dll", EntryPoint = "MapViewOfFile")]
+        private static extern IntPtr MapViewOfFile(
+            IntPtr hFileMappingObject,//HANDLE hFileMappingObject,
+            UInt32 dwDesiredAccess,//DWORD dwDesiredAccess
+            UInt32 dwFileOffsetHight,//DWORD dwFileOffsetHigh,
+            UInt32 dwFileOffsetLow,//DWORD dwFileOffsetLow,
+            UInt32 dwNumberOfBytesToMap//SIZE_T dwNumberOfBytesToMap
+         );
+
+        [DllImport("Kernel32.dll", EntryPoint = "UnmapViewOfFile")]
+        private static extern int UnmapViewOfFile(IntPtr lpBaseAddress);
+
+        [DllImport("Kernel32.dll", EntryPoint = "CloseHandle")]
+        private static extern int CloseHandle(IntPtr hObject);
 
         public MainForm()
         {
@@ -45,6 +97,13 @@ namespace pci_server
                 rotationLabelList[e.Mouse.probeIndex - 1].Text = xAngle.ToString() + " / " + e.Mouse.cumulativeX.ToString();
                 travelBarList[e.Mouse.probeIndex - 1].Value = yTravelInt % 3000;
                 rotationBarList[e.Mouse.probeIndex - 1].Value = xAngle;
+
+                // update shared memory
+                if (DateTime.Now.Millisecond - sharedMemoryLastTime > sharedMemoryInterval)
+                {
+                    // update information
+                    updateSharedMemory();
+                }
             }
         }
 
@@ -118,6 +177,59 @@ namespace pci_server
             USBSerial.advConfigDataReceived += new USBSerial.AdvConfigDataReceived(advConfigDataReceived);
 
             USBSerial.sendDataError += new USBSerial.SendDataError(sendDataError);
+
+            initSharedMemory();
+            
+        }
+
+        private void initSharedMemory()
+        {
+            // init data
+            smData = new SharedMemeryData();
+
+            // byte[] smBytes = SharedMemeryData.ObjectToByteArray(smData);
+            // smLength = (uint)smBytes.Length;
+            IntPtr hFile = new IntPtr(INVALID_HANDLE_VALUE);
+            smHandle = CreateFileMapping(hFile, 0, PAGE_READWRITE, 0, smLength, "PCI-SERVER-SM");
+            if (smHandle == IntPtr.Zero)
+            {
+                MessageBox.Show("创建共享内存对象失败!");
+                return;
+            }
+            smAddr = MapViewOfFile(smHandle, FILE_MAP_ALL_ACCESS, 0, 0, 0);
+            if (smAddr == IntPtr.Zero)
+            {
+                MessageBox.Show("创建共享内存映射文件失败!");
+                return;
+            }
+            bool mutexCreated;
+            smMutex = new Mutex(true, "PCI-SERVER-MUTEX", out mutexCreated);
+            smMutex.ReleaseMutex();
+        }
+
+        private void freeSharedMemory()
+        {
+            UnmapViewOfFile(smAddr);
+            CloseHandle(smHandle);
+        }
+
+        private void updateSharedMemory()
+        {
+            try
+            {
+                byte[] sendData = BitConverter.GetBytes(DateTime.Now.Millisecond);
+                smMutex.WaitOne();
+                // byte[] sendData = SharedMemeryData.ObjectToByteArray(smData);
+                Marshal.Copy(sendData, 0, smAddr, sendData.Length);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("更新共享内存出错：" + ex.Message); 
+            }
+            finally
+            {
+                smMutex.ReleaseMutex();
+            }
         }
 
         private void sendDataError(string errMessage)
@@ -129,6 +241,12 @@ namespace pci_server
         {
             this.BeginInvoke(new MethodInvoker(delegate
             {
+                if (DateTime.Now.Millisecond - sharedMemoryLastTime > sharedMemoryInterval)
+                {
+                    // update information
+                    updateSharedMemory();
+                }
+
                 pbrPressure.Value = deviceData.pressure;
                 lbPressureValue.Text = deviceData.pressure.ToString();
                 pbxSwitch1.BackColor = deviceData.switch1 == 1 ? Color.Green : Color.Gray;
@@ -284,6 +402,7 @@ namespace pci_server
 
         private void tmrCheckSerial_Tick(object sender, EventArgs e)
         {
+            updateSharedMemory();
 
             // task
             if (!PCIConfig.NewBaseConfig.ContainsKey("SerialPort") || PCIConfig.NewBaseConfig["SerialPort"] == "") {
@@ -323,6 +442,7 @@ namespace pci_server
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
             CloseSerialPort();
+            freeSharedMemory();
         }
 
         private void btnSetForce1_Click(object sender, EventArgs e)
@@ -362,6 +482,11 @@ namespace pci_server
         }
 
         private void lbForceValue1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
 
         }

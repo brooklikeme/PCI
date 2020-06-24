@@ -11,6 +11,8 @@ using System.Configuration;
 using System.Collections.Specialized;
 using System.IO.Ports;
 using System.Drawing;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
 
 namespace pci_server
 {
@@ -59,6 +61,75 @@ namespace pci_server
         public byte servo_angle1;      //1
         public byte servo_angle2;      //1  
         public byte servo_angle3;      //1
+    }
+
+    [Serializable]
+    class ReadonlyData
+    {
+        public float diam1;
+        public float diam2;
+        public float diam3;
+        public float travel1;
+        public float travel2;
+        public float travel3;
+        public float angle1;
+        public float angle2;
+        public float angle3;
+        public int pressure;
+        public int contrast;
+        public bool switch1;
+        public bool switch2;
+        public int force1;
+        public int force2;
+        public int force3;
+    }
+
+    [Serializable]
+    class WritableData
+    {
+        public int force1_set;
+        public int force2_set;
+        public int force3_set;
+    }
+
+    [Serializable]
+    class SharedMemeryData
+    {
+        public WritableData writableData;
+        public ReadonlyData readonlyData;
+
+        public SharedMemeryData()
+        {
+            writableData = new WritableData();
+            readonlyData = new ReadonlyData();
+        }
+        ~SharedMemeryData()
+        {
+        }
+
+        // Convert an object to a byte array
+        public static byte[] ObjectToByteArray(Object obj)
+        {
+            BinaryFormatter bf = new BinaryFormatter();
+            using (var ms = new MemoryStream())
+            {
+                bf.Serialize(ms, obj);
+                return ms.ToArray();
+            }
+        }
+
+        // Convert a byte array to an Object
+        public static Object ByteArrayToObject(byte[] arrBytes)
+        {
+            using (var memStream = new MemoryStream())
+            {
+                var binForm = new BinaryFormatter();
+                memStream.Write(arrBytes, 0, arrBytes.Length);
+                memStream.Seek(0, SeekOrigin.Begin);
+                var obj = binForm.Deserialize(memStream);
+                return obj;
+            }
+        }
     }
 
     static class USBSerial

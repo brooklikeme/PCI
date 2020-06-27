@@ -22,10 +22,10 @@ namespace pci_test
         const int PAGE_READWRITE = 0x04;
         private IntPtr smHandle;     //文件句柄
         private IntPtr smAddr;       //共享内存地址
-        private SharedMemeryData smData;
+        private int smLength = 100;
+        private byte[] smData = new byte[100];
         private int sharedMemoryInterval = 100;
         private int sharedMemoryLastTime = DateTime.Now.Millisecond;
-        private int smLength = 1000;
         private Mutex smMutex;
 
         [DllImport("User32.dll")]
@@ -81,9 +81,6 @@ namespace pci_test
 
         private void initSharedMemory()
         {
-            // init data
-            smData = new SharedMemeryData();
-
             // byte[] smBytes = SharedMemeryData.ObjectToByteArray(smData);
             // smLength = smBytes.Length;
             smHandle = OpenFileMapping(FILE_MAP_ALL_ACCESS, 0, "PCI-SERVER-SM");
@@ -113,13 +110,16 @@ namespace pci_test
             try
             {
                 smMutex.WaitOne();
-                byte[] recvData = new byte[1000];
-                Marshal.Copy(smAddr, recvData, 0, smLength);
-                int i = BitConverter.ToInt32(recvData, 0);
+                Marshal.Copy(smAddr, smData, 0, smLength);
+                float force1_set = BitConverter.ToSingle(smData, SMPos.angle1);
+                float force2_set = BitConverter.ToSingle(smData, SMPos.angle2);
+                float force3_set = BitConverter.ToSingle(smData, SMPos.angle3);
                 // smData = (SharedMemeryData)SharedMemeryData.ByteArrayToObject(recvData);
                 this.BeginInvoke(new MethodInvoker(delegate
                 {
-                    label1.Text = i.ToString();
+                    label1.Text = force1_set.ToString();
+                    label2.Text = force2_set.ToString();
+                    label3.Text = force3_set.ToString();
                 }));
             }
             catch (Exception ex)
@@ -134,22 +134,6 @@ namespace pci_test
 
         private void updateSharedMemory()
         {
-            try
-            {
-                smData.readonlyData.pressure = DateTime.Now.Millisecond;
-                smMutex.WaitOne();
-                byte[] sendData = SharedMemeryData.ObjectToByteArray(smData);
-                if (sendData.Length <= smLength)
-                    Marshal.Copy(sendData, 0, smAddr, (int)smLength);
-            }
-            catch (Exception ex)
-            {
-                //   
-            }
-            finally
-            {
-                smMutex.ReleaseMutex();
-            }
         }
 
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
@@ -163,84 +147,30 @@ namespace pci_test
         }
     }
 
-    [Serializable]
-    class ReadonlyData
+    public static class SMPos
     {
-        public float diam1;
-        public float diam2;
-        public float diam3;
-        public float travel1;
-        public float travel2;
-        public float travel3;
-        public float angle1;
-        public float angle2;
-        public float angle3;
-        public int pressure;
-        public int contrast;
-        public bool switch1;
-        public bool switch2;
-        public int force1;
-        public int force2;
-        public int force3;
-    }
+        // writable
+        public static int force1_set = 0;   // int32
+        public static int force2_set = 4;   // int32
+        public static int force3_set = 8;   // int32
+        // readonly
+        public static int diam1 = 12;       // float
+        public static int diam2 = 16;       // float
+        public static int diam3 = 20;       // float
+        public static int travel1 = 24;     // float
+        public static int travel2 = 28;     // float
+        public static int travel3 = 32;     // float
+        public static int angle1 = 36;      // float
+        public static int angle2 = 40;      // float
+        public static int angle3 = 44;      // float
+        public static int pressure = 48;    // int32
+        public static int contrast = 52;    // int32
+        public static int force1 = 56;      // int32
+        public static int force2 = 60;      // int32
+        public static int force3 = 64;      // int32
 
-    [Serializable]
-    class WritableData
-    {
-        public int force1_set;
-        public int force2_set;
-        public int force3_set;
-    }
+        public static int switch1 = 68;     // boolean
+        public static int switch2 = 72;     // boolean
 
-    [Serializable]
-    class SharedMemeryData
-    {
-        public WritableData writableData;
-        public ReadonlyData readonlyData;
-
-        public SharedMemeryData()
-        {
-            writableData = new WritableData();
-            readonlyData = new ReadonlyData();
-        }
-        ~SharedMemeryData()
-        {
-        }
-
-        // Convert an object to a byte array
-        public static byte[] ObjectToByteArray(Object obj)
-        {
-            BinaryFormatter bf = new BinaryFormatter();
-            using (var ms = new MemoryStream())
-            {
-                bf.Serialize(ms, obj);
-                return ms.ToArray();
-            }
-        }
-
-        public static T FromByteArray<T>(byte[] data)
-        {
-            if (data == null)
-                return default(T);
-            BinaryFormatter bf = new BinaryFormatter();
-            using (MemoryStream ms = new MemoryStream(data))
-            {
-                object obj = bf.Deserialize(ms);
-                return (T)obj;
-            }
-        }
-
-        // Convert a byte array to an Object
-        public static Object ByteArrayToObject(byte[] arrBytes)
-        {
-            using (var memStream = new MemoryStream())
-            {
-                var binForm = new BinaryFormatter();
-                memStream.Write(arrBytes, 0, arrBytes.Length);
-                memStream.Seek(0, SeekOrigin.Begin);
-                var obj = binForm.Deserialize(memStream);
-                return obj;
-            }
-        }
     }
 }

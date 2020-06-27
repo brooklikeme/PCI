@@ -32,10 +32,10 @@ namespace pci_server
         const int PAGE_READWRITE = 0x04;
         private IntPtr smHandle;     //文件句柄
         private IntPtr smAddr;       //共享内存地址
-        private SharedMemeryData smData;
+        private byte[] smData = new byte[100];
         private int sharedMemoryInterval = 100;
         private int sharedMemoryLastTime = DateTime.Now.Millisecond; 
-        private uint smLength = 1000;
+        private uint smLength = 100;
         private Mutex smMutex;
 
         [DllImport("User32.dll")]
@@ -184,11 +184,6 @@ namespace pci_server
 
         private void initSharedMemory()
         {
-            // init data
-            smData = new SharedMemeryData();
-
-            // byte[] smBytes = SharedMemeryData.ObjectToByteArray(smData);
-            // smLength = (uint)smBytes.Length;
             IntPtr hFile = new IntPtr(INVALID_HANDLE_VALUE);
             smHandle = CreateFileMapping(hFile, 0, PAGE_READWRITE, 0, smLength, "PCI-SERVER-SM");
             if (smHandle == IntPtr.Zero)
@@ -217,10 +212,11 @@ namespace pci_server
         {
             try
             {
-                byte[] sendData = BitConverter.GetBytes(DateTime.Now.Millisecond);
+                Array.Copy(BitConverter.GetBytes(1.1F), 0, smData, SMPos.angle1, 4);
+                Array.Copy(BitConverter.GetBytes(2.2F), 0, smData, SMPos.angle2, 4);
+                Array.Copy(BitConverter.GetBytes(3.3F), 0, smData, SMPos.angle3, 4);
                 smMutex.WaitOne();
-                // byte[] sendData = SharedMemeryData.ObjectToByteArray(smData);
-                Marshal.Copy(sendData, 0, smAddr, sendData.Length);
+                Marshal.Copy(smData, 0, smAddr, (int)smLength);
             }
             catch (Exception ex)
             {

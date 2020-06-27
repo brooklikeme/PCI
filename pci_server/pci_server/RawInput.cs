@@ -63,73 +63,31 @@ namespace pci_server
         public byte servo_angle3;      //1
     }
 
-    [Serializable]
-    class ReadonlyData
+    public static class SMPos
     {
-        public float diam1;
-        public float diam2;
-        public float diam3;
-        public float travel1;
-        public float travel2;
-        public float travel3;
-        public float angle1;
-        public float angle2;
-        public float angle3;
-        public int pressure;
-        public int contrast;
-        public bool switch1;
-        public bool switch2;
-        public int force1;
-        public int force2;
-        public int force3;
-    }
+        // writable
+        public static int force1_set = 0;   // int32
+        public static int force2_set = 4;   // int32
+        public static int force3_set = 8;   // int32
+        // readonly
+        public static int diam1 = 12;       // float
+        public static int diam2 = 16;       // float
+        public static int diam3 = 20;       // float
+        public static int travel1 = 24;     // float
+        public static int travel2 = 28;     // float
+        public static int travel3 = 32;     // float
+        public static int angle1 = 36;      // float
+        public static int angle2 = 40;      // float
+        public static int angle3 = 44;      // float
+        public static int pressure = 48;    // int32
+        public static int contrast = 52;    // int32
+        public static int force1 = 56;      // int32
+        public static int force2 = 60;      // int32
+        public static int force3 = 64;      // int32
 
-    [Serializable]
-    class WritableData
-    {
-        public int force1_set;
-        public int force2_set;
-        public int force3_set;
-    }
+        public static int switch1 = 68;     // boolean
+        public static int switch2 = 72;     // boolean
 
-    [Serializable]
-    class SharedMemeryData
-    {
-        public WritableData writableData;
-        public ReadonlyData readonlyData;
-
-        public SharedMemeryData()
-        {
-            writableData = new WritableData();
-            readonlyData = new ReadonlyData();
-        }
-        ~SharedMemeryData()
-        {
-        }
-
-        // Convert an object to a byte array
-        public static byte[] ObjectToByteArray(Object obj)
-        {
-            BinaryFormatter bf = new BinaryFormatter();
-            using (var ms = new MemoryStream())
-            {
-                bf.Serialize(ms, obj);
-                return ms.ToArray();
-            }
-        }
-
-        // Convert a byte array to an Object
-        public static Object ByteArrayToObject(byte[] arrBytes)
-        {
-            using (var memStream = new MemoryStream())
-            {
-                var binForm = new BinaryFormatter();
-                memStream.Write(arrBytes, 0, arrBytes.Length);
-                memStream.Seek(0, SeekOrigin.Begin);
-                var obj = binForm.Deserialize(memStream);
-                return obj;
-            }
-        }
     }
 
     static class USBSerial

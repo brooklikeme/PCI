@@ -1,4 +1,4 @@
-﻿namespace pci_test
+﻿namespace pci_server_test
 {
     partial class MainForm
     {
@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.lbThicknessValue3 = new System.Windows.Forms.Label();
             this.lbThicknessValue2 = new System.Windows.Forms.Label();
             this.lbThicknessValue1 = new System.Windows.Forms.Label();
@@ -40,12 +41,6 @@
             this.lbTravelValue2 = new System.Windows.Forms.Label();
             this.lbRotationValue1 = new System.Windows.Forms.Label();
             this.lbTravelValue1 = new System.Windows.Forms.Label();
-            this.btnZeroRotation3 = new System.Windows.Forms.Button();
-            this.btnZeroTravel3 = new System.Windows.Forms.Button();
-            this.btnZeroRotation2 = new System.Windows.Forms.Button();
-            this.btnZeroTravel2 = new System.Windows.Forms.Button();
-            this.btnZeroRotation1 = new System.Windows.Forms.Button();
-            this.btnZeroTravel1 = new System.Windows.Forms.Button();
             this.lbPressureUnit = new System.Windows.Forms.Label();
             this.lbPressureValue = new System.Windows.Forms.Label();
             this.lbPressure = new System.Windows.Forms.Label();
@@ -74,7 +69,6 @@
             this.btnSetForce1 = new System.Windows.Forms.Button();
             this.cbxForce1 = new System.Windows.Forms.ComboBox();
             this.lbThickness1 = new System.Windows.Forms.Label();
-            this.btnConfig = new System.Windows.Forms.Button();
             this.lbSwitch2 = new System.Windows.Forms.Label();
             this.lbSwitch1 = new System.Windows.Forms.Label();
             this.lbContrast = new System.Windows.Forms.Label();
@@ -85,6 +79,10 @@
             this.pbrPressure = new System.Windows.Forms.ProgressBar();
             this.tbrTravel1 = new System.Windows.Forms.TrackBar();
             this.btnClose = new System.Windows.Forms.Button();
+            this.cpbRotation3 = new CircularProgressBar.CircularProgressBar();
+            this.cpbRotation2 = new CircularProgressBar.CircularProgressBar();
+            this.cpbRotation1 = new CircularProgressBar.CircularProgressBar();
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.pbxSwitch2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbxSwitch1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbxContrast)).BeginInit();
@@ -204,60 +202,6 @@
             this.lbTravelValue1.TabIndex = 131;
             this.lbTravelValue1.Text = "N/A";
             // 
-            // btnZeroRotation3
-            // 
-            this.btnZeroRotation3.Location = new System.Drawing.Point(387, 451);
-            this.btnZeroRotation3.Name = "btnZeroRotation3";
-            this.btnZeroRotation3.Size = new System.Drawing.Size(103, 45);
-            this.btnZeroRotation3.TabIndex = 130;
-            this.btnZeroRotation3.Text = "清零";
-            this.btnZeroRotation3.UseVisualStyleBackColor = true;
-            // 
-            // btnZeroTravel3
-            // 
-            this.btnZeroTravel3.Location = new System.Drawing.Point(400, 217);
-            this.btnZeroTravel3.Name = "btnZeroTravel3";
-            this.btnZeroTravel3.Size = new System.Drawing.Size(103, 45);
-            this.btnZeroTravel3.TabIndex = 129;
-            this.btnZeroTravel3.Text = "清零";
-            this.btnZeroTravel3.UseVisualStyleBackColor = true;
-            // 
-            // btnZeroRotation2
-            // 
-            this.btnZeroRotation2.Location = new System.Drawing.Point(982, 451);
-            this.btnZeroRotation2.Name = "btnZeroRotation2";
-            this.btnZeroRotation2.Size = new System.Drawing.Size(103, 45);
-            this.btnZeroRotation2.TabIndex = 128;
-            this.btnZeroRotation2.Text = "清零";
-            this.btnZeroRotation2.UseVisualStyleBackColor = true;
-            // 
-            // btnZeroTravel2
-            // 
-            this.btnZeroTravel2.Location = new System.Drawing.Point(998, 217);
-            this.btnZeroTravel2.Name = "btnZeroTravel2";
-            this.btnZeroTravel2.Size = new System.Drawing.Size(103, 45);
-            this.btnZeroTravel2.TabIndex = 127;
-            this.btnZeroTravel2.Text = "清零";
-            this.btnZeroTravel2.UseVisualStyleBackColor = true;
-            // 
-            // btnZeroRotation1
-            // 
-            this.btnZeroRotation1.Location = new System.Drawing.Point(1534, 451);
-            this.btnZeroRotation1.Name = "btnZeroRotation1";
-            this.btnZeroRotation1.Size = new System.Drawing.Size(103, 45);
-            this.btnZeroRotation1.TabIndex = 126;
-            this.btnZeroRotation1.Text = "清零";
-            this.btnZeroRotation1.UseVisualStyleBackColor = true;
-            // 
-            // btnZeroTravel1
-            // 
-            this.btnZeroTravel1.Location = new System.Drawing.Point(1553, 217);
-            this.btnZeroTravel1.Name = "btnZeroTravel1";
-            this.btnZeroTravel1.Size = new System.Drawing.Size(103, 45);
-            this.btnZeroTravel1.TabIndex = 125;
-            this.btnZeroTravel1.Text = "清零";
-            this.btnZeroTravel1.UseVisualStyleBackColor = true;
-            // 
             // lbPressureUnit
             // 
             this.lbPressureUnit.AutoSize = true;
@@ -329,6 +273,7 @@
             this.btnSetForce3.TabIndex = 117;
             this.btnSetForce3.Text = "设置";
             this.btnSetForce3.UseVisualStyleBackColor = true;
+            this.btnSetForce3.Click += new System.EventHandler(this.btnSetForce3_Click);
             // 
             // cbxForce3
             // 
@@ -422,6 +367,7 @@
             this.btnSetForce2.TabIndex = 108;
             this.btnSetForce2.Text = "设置";
             this.btnSetForce2.UseVisualStyleBackColor = true;
+            this.btnSetForce2.Click += new System.EventHandler(this.btnSetForce2_Click);
             // 
             // cbxForce2
             // 
@@ -515,6 +461,7 @@
             this.btnSetForce1.TabIndex = 99;
             this.btnSetForce1.Text = "设置";
             this.btnSetForce1.UseVisualStyleBackColor = true;
+            this.btnSetForce1.Click += new System.EventHandler(this.btnSetForce1_Click);
             // 
             // cbxForce1
             // 
@@ -545,15 +492,6 @@
             this.lbThickness1.Size = new System.Drawing.Size(56, 26);
             this.lbThickness1.TabIndex = 97;
             this.lbThickness1.Text = "直径";
-            // 
-            // btnConfig
-            // 
-            this.btnConfig.Location = new System.Drawing.Point(33, 773);
-            this.btnConfig.Name = "btnConfig";
-            this.btnConfig.Size = new System.Drawing.Size(175, 61);
-            this.btnConfig.TabIndex = 96;
-            this.btnConfig.Text = "设置";
-            this.btnConfig.UseVisualStyleBackColor = true;
             // 
             // lbSwitch2
             // 
@@ -644,12 +582,116 @@
             this.btnClose.TabIndex = 86;
             this.btnClose.Text = "关闭";
             this.btnClose.UseVisualStyleBackColor = true;
+            this.btnClose.Click += new System.EventHandler(this.btnClose_Click);
+            // 
+            // cpbRotation3
+            // 
+            this.cpbRotation3.AnimationFunction = WinFormAnimation.KnownAnimationFunctions.Liner;
+            this.cpbRotation3.AnimationSpeed = 0;
+            this.cpbRotation3.BackColor = System.Drawing.Color.Transparent;
+            this.cpbRotation3.Font = new System.Drawing.Font("Microsoft Sans Serif", 72F, System.Drawing.FontStyle.Bold);
+            this.cpbRotation3.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.cpbRotation3.InnerColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.cpbRotation3.InnerMargin = 2;
+            this.cpbRotation3.InnerWidth = -1;
+            this.cpbRotation3.Location = new System.Drawing.Point(34, 365);
+            this.cpbRotation3.MarqueeAnimationSpeed = 2000;
+            this.cpbRotation3.Maximum = 360;
+            this.cpbRotation3.Name = "cpbRotation3";
+            this.cpbRotation3.OuterColor = System.Drawing.Color.DarkGray;
+            this.cpbRotation3.OuterMargin = -25;
+            this.cpbRotation3.OuterWidth = 26;
+            this.cpbRotation3.ProgressColor = System.Drawing.Color.Green;
+            this.cpbRotation3.ProgressWidth = 10;
+            this.cpbRotation3.SecondaryFont = new System.Drawing.Font("Microsoft Sans Serif", 36F);
+            this.cpbRotation3.Size = new System.Drawing.Size(150, 150);
+            this.cpbRotation3.StartAngle = 270;
+            this.cpbRotation3.SubscriptColor = System.Drawing.Color.FromArgb(((int)(((byte)(166)))), ((int)(((byte)(166)))), ((int)(((byte)(166)))));
+            this.cpbRotation3.SubscriptMargin = new System.Windows.Forms.Padding(10, -35, 0, 0);
+            this.cpbRotation3.SubscriptText = ".23";
+            this.cpbRotation3.SuperscriptColor = System.Drawing.Color.FromArgb(((int)(((byte)(166)))), ((int)(((byte)(166)))), ((int)(((byte)(166)))));
+            this.cpbRotation3.SuperscriptMargin = new System.Windows.Forms.Padding(10, 35, 0, 0);
+            this.cpbRotation3.SuperscriptText = "°C";
+            this.cpbRotation3.TabIndex = 145;
+            this.cpbRotation3.TextMargin = new System.Windows.Forms.Padding(8, 8, 0, 0);
+            this.cpbRotation3.Value = 68;
+            // 
+            // cpbRotation2
+            // 
+            this.cpbRotation2.AnimationFunction = WinFormAnimation.KnownAnimationFunctions.Liner;
+            this.cpbRotation2.AnimationSpeed = 0;
+            this.cpbRotation2.BackColor = System.Drawing.Color.Transparent;
+            this.cpbRotation2.Font = new System.Drawing.Font("Microsoft Sans Serif", 72F, System.Drawing.FontStyle.Bold);
+            this.cpbRotation2.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.cpbRotation2.InnerColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.cpbRotation2.InnerMargin = 2;
+            this.cpbRotation2.InnerWidth = -1;
+            this.cpbRotation2.Location = new System.Drawing.Point(651, 365);
+            this.cpbRotation2.MarqueeAnimationSpeed = 2000;
+            this.cpbRotation2.Maximum = 360;
+            this.cpbRotation2.Name = "cpbRotation2";
+            this.cpbRotation2.OuterColor = System.Drawing.Color.DarkGray;
+            this.cpbRotation2.OuterMargin = -25;
+            this.cpbRotation2.OuterWidth = 26;
+            this.cpbRotation2.ProgressColor = System.Drawing.Color.Green;
+            this.cpbRotation2.ProgressWidth = 10;
+            this.cpbRotation2.SecondaryFont = new System.Drawing.Font("Microsoft Sans Serif", 36F);
+            this.cpbRotation2.Size = new System.Drawing.Size(150, 150);
+            this.cpbRotation2.StartAngle = 270;
+            this.cpbRotation2.SubscriptColor = System.Drawing.Color.FromArgb(((int)(((byte)(166)))), ((int)(((byte)(166)))), ((int)(((byte)(166)))));
+            this.cpbRotation2.SubscriptMargin = new System.Windows.Forms.Padding(10, -35, 0, 0);
+            this.cpbRotation2.SubscriptText = ".23";
+            this.cpbRotation2.SuperscriptColor = System.Drawing.Color.FromArgb(((int)(((byte)(166)))), ((int)(((byte)(166)))), ((int)(((byte)(166)))));
+            this.cpbRotation2.SuperscriptMargin = new System.Windows.Forms.Padding(10, 35, 0, 0);
+            this.cpbRotation2.SuperscriptText = "°C";
+            this.cpbRotation2.TabIndex = 144;
+            this.cpbRotation2.TextMargin = new System.Windows.Forms.Padding(8, 8, 0, 0);
+            this.cpbRotation2.Value = 68;
+            // 
+            // cpbRotation1
+            // 
+            this.cpbRotation1.AnimationFunction = WinFormAnimation.KnownAnimationFunctions.Liner;
+            this.cpbRotation1.AnimationSpeed = 0;
+            this.cpbRotation1.BackColor = System.Drawing.Color.Transparent;
+            this.cpbRotation1.Font = new System.Drawing.Font("Microsoft Sans Serif", 72F, System.Drawing.FontStyle.Bold);
+            this.cpbRotation1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
+            this.cpbRotation1.InnerColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
+            this.cpbRotation1.InnerMargin = 2;
+            this.cpbRotation1.InnerWidth = -1;
+            this.cpbRotation1.Location = new System.Drawing.Point(1209, 365);
+            this.cpbRotation1.MarqueeAnimationSpeed = 2000;
+            this.cpbRotation1.Maximum = 360;
+            this.cpbRotation1.Name = "cpbRotation1";
+            this.cpbRotation1.OuterColor = System.Drawing.Color.DarkGray;
+            this.cpbRotation1.OuterMargin = -25;
+            this.cpbRotation1.OuterWidth = 26;
+            this.cpbRotation1.ProgressColor = System.Drawing.Color.Green;
+            this.cpbRotation1.ProgressWidth = 10;
+            this.cpbRotation1.SecondaryFont = new System.Drawing.Font("Microsoft Sans Serif", 36F);
+            this.cpbRotation1.Size = new System.Drawing.Size(150, 150);
+            this.cpbRotation1.StartAngle = 270;
+            this.cpbRotation1.SubscriptColor = System.Drawing.Color.FromArgb(((int)(((byte)(166)))), ((int)(((byte)(166)))), ((int)(((byte)(166)))));
+            this.cpbRotation1.SubscriptMargin = new System.Windows.Forms.Padding(10, -35, 0, 0);
+            this.cpbRotation1.SubscriptText = ".23";
+            this.cpbRotation1.SuperscriptColor = System.Drawing.Color.FromArgb(((int)(((byte)(166)))), ((int)(((byte)(166)))), ((int)(((byte)(166)))));
+            this.cpbRotation1.SuperscriptMargin = new System.Windows.Forms.Padding(10, 35, 0, 0);
+            this.cpbRotation1.SuperscriptText = "°C";
+            this.cpbRotation1.TabIndex = 143;
+            this.cpbRotation1.TextMargin = new System.Windows.Forms.Padding(8, 8, 0, 0);
+            this.cpbRotation1.Value = 68;
+            // 
+            // timer1
+            // 
+            this.timer1.Tick += new System.EventHandler(this.timer1_Tick);
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1711, 897);
+            this.Controls.Add(this.cpbRotation3);
+            this.Controls.Add(this.cpbRotation2);
+            this.Controls.Add(this.cpbRotation1);
             this.Controls.Add(this.lbThicknessValue3);
             this.Controls.Add(this.lbThicknessValue2);
             this.Controls.Add(this.lbThicknessValue1);
@@ -662,12 +704,6 @@
             this.Controls.Add(this.lbTravelValue2);
             this.Controls.Add(this.lbRotationValue1);
             this.Controls.Add(this.lbTravelValue1);
-            this.Controls.Add(this.btnZeroRotation3);
-            this.Controls.Add(this.btnZeroTravel3);
-            this.Controls.Add(this.btnZeroRotation2);
-            this.Controls.Add(this.btnZeroTravel2);
-            this.Controls.Add(this.btnZeroRotation1);
-            this.Controls.Add(this.btnZeroTravel1);
             this.Controls.Add(this.lbPressureUnit);
             this.Controls.Add(this.lbPressureValue);
             this.Controls.Add(this.lbPressure);
@@ -696,7 +732,6 @@
             this.Controls.Add(this.btnSetForce1);
             this.Controls.Add(this.cbxForce1);
             this.Controls.Add(this.lbThickness1);
-            this.Controls.Add(this.btnConfig);
             this.Controls.Add(this.lbSwitch2);
             this.Controls.Add(this.lbSwitch1);
             this.Controls.Add(this.lbContrast);
@@ -739,12 +774,6 @@
         private System.Windows.Forms.Label lbTravelValue2;
         private System.Windows.Forms.Label lbRotationValue1;
         private System.Windows.Forms.Label lbTravelValue1;
-        private System.Windows.Forms.Button btnZeroRotation3;
-        private System.Windows.Forms.Button btnZeroTravel3;
-        private System.Windows.Forms.Button btnZeroRotation2;
-        private System.Windows.Forms.Button btnZeroTravel2;
-        private System.Windows.Forms.Button btnZeroRotation1;
-        private System.Windows.Forms.Button btnZeroTravel1;
         private System.Windows.Forms.Label lbPressureUnit;
         private System.Windows.Forms.Label lbPressureValue;
         private System.Windows.Forms.Label lbPressure;
@@ -773,7 +802,6 @@
         private System.Windows.Forms.Button btnSetForce1;
         private System.Windows.Forms.ComboBox cbxForce1;
         private System.Windows.Forms.Label lbThickness1;
-        private System.Windows.Forms.Button btnConfig;
         private System.Windows.Forms.Label lbSwitch2;
         private System.Windows.Forms.Label lbSwitch1;
         private System.Windows.Forms.Label lbContrast;
@@ -784,6 +812,10 @@
         private System.Windows.Forms.ProgressBar pbrPressure;
         private System.Windows.Forms.TrackBar tbrTravel1;
         private System.Windows.Forms.Button btnClose;
+        private CircularProgressBar.CircularProgressBar cpbRotation3;
+        private CircularProgressBar.CircularProgressBar cpbRotation2;
+        private CircularProgressBar.CircularProgressBar cpbRotation1;
+        private System.Windows.Forms.Timer timer1;
 
     }
 }

@@ -80,15 +80,125 @@ namespace pci_server
         public static int angle2 = 40;      // float
         public static int angle3 = 44;      // float
         public static int pressure = 48;    // int32
-        public static int contrast = 52;    // int32
-        public static int force1 = 56;      // int32
-        public static int force2 = 60;      // int32
-        public static int force3 = 64;      // int32
+        public static int force1 = 52;      // int32
+        public static int force2 = 56;      // int32
+        public static int force3 = 60;      // int32
 
-        public static int switch1 = 68;     // boolean
-        public static int switch2 = 72;     // boolean
+        public static int contrast = 64;    // boolean
+        public static int switch1 = 65;     // boolean
+        public static int switch2 = 66;     // boolean
 
+        public static int sm_length = 100;        // shared memory total size
+        public static int sm_set_length = 12;     // shared memory settnig size
     }
+
+    public class SMData
+    {
+        public float diam1;             // Unit: mm
+        public float diam2;             // Unit: mm
+        public float diam3;             // Unit: mm
+        public float travel1;           // Unit: mm
+        public float travel2;           // Unit: mm
+        public float travel3;           // Unit: mm
+        public float angle1;            // Unit: degree
+        public float angle2;            // Unit: degree
+        public float angle3;            // Unit: degree
+        public int pressure;            // kPa
+        public int force1;              // Force Percentage
+        public int force2;              // Force Percentage
+        public int force3;              // Force Percentage
+
+        public bool contrast;           // true: action, false: no action
+        public bool switch1;            // true: on, false: off
+        public bool switch2;            // true: on, false: off
+
+        public byte[] data;             // shared memory data 
+
+        public SMData(){
+            data = new byte[100];
+        }
+
+        public int getAimForce1()
+        {
+            return BitConverter.ToInt32(data, SMPos.force1_set);
+        }
+        public int getAimForce2()
+        {
+            return BitConverter.ToInt32(data, SMPos.force2_set);
+        }
+        public int getAimForce3()
+        {
+            return BitConverter.ToInt32(data, SMPos.force3_set);
+        }
+
+        public void setAimForce1(int value)
+        {
+            Array.Copy(BitConverter.GetBytes(value), 0, data, SMPos.force1_set, 4);
+        }
+
+        public void setAimForce2(int value)
+        {
+            Array.Copy(BitConverter.GetBytes(value), 0, data, SMPos.force2_set, 4);
+        }
+        public void setAimForce3(int value)
+        {
+            Array.Copy(BitConverter.GetBytes(value), 0, data, SMPos.force3_set, 4);
+        }
+
+        public void getData()
+        {
+            this.diam1 = BitConverter.ToSingle(data, SMPos.diam1);
+            this.diam2 = BitConverter.ToSingle(data, SMPos.diam2);
+            this.diam3 = BitConverter.ToSingle(data, SMPos.diam3);
+
+            this.travel1 = BitConverter.ToSingle(data, SMPos.travel1);
+            this.travel2 = BitConverter.ToSingle(data, SMPos.travel2);
+            this.travel3 = BitConverter.ToSingle(data, SMPos.travel3);
+
+            this.angle1 = BitConverter.ToSingle(data, SMPos.angle1);
+            this.angle2 = BitConverter.ToSingle(data, SMPos.angle2);
+            this.angle3 = BitConverter.ToSingle(data, SMPos.angle3);
+
+            this.pressure = BitConverter.ToInt32(data, SMPos.pressure);
+
+            this.force1 = BitConverter.ToInt32(data, SMPos.force1);
+            this.force2 = BitConverter.ToInt32(data, SMPos.force2);
+            this.force3 = BitConverter.ToInt32(data, SMPos.force3);
+
+            this.contrast = BitConverter.ToBoolean(data, SMPos.contrast);
+
+            this.switch1 = BitConverter.ToBoolean(data, SMPos.switch1);
+            this.switch2 = BitConverter.ToBoolean(data, SMPos.switch2);
+
+        }
+        
+        public void setData()
+        {
+            // readonly
+            Array.Copy(BitConverter.GetBytes(this.diam1), 0, data, SMPos.diam1, 4);
+            Array.Copy(BitConverter.GetBytes(this.diam2), 0, data, SMPos.diam2, 4);
+            Array.Copy(BitConverter.GetBytes(this.diam3), 0, data, SMPos.diam3, 4);
+
+            Array.Copy(BitConverter.GetBytes(this.travel1), 0, data, SMPos.travel1, 4);
+            Array.Copy(BitConverter.GetBytes(this.travel2), 0, data, SMPos.travel2, 4);
+            Array.Copy(BitConverter.GetBytes(this.travel3), 0, data, SMPos.travel3, 4);
+
+            Array.Copy(BitConverter.GetBytes(this.angle1), 0, data, SMPos.angle1, 4);
+            Array.Copy(BitConverter.GetBytes(this.angle2), 0, data, SMPos.angle2, 4);
+            Array.Copy(BitConverter.GetBytes(this.angle3), 0, data, SMPos.angle3, 4);
+
+            Array.Copy(BitConverter.GetBytes(this.pressure), 0, data, SMPos.pressure, 4);
+
+            Array.Copy(BitConverter.GetBytes(this.force1), 0, data, SMPos.force1, 4);
+            Array.Copy(BitConverter.GetBytes(this.force2), 0, data, SMPos.force2, 4);
+            Array.Copy(BitConverter.GetBytes(this.force3), 0, data, SMPos.force3, 4);
+
+            Array.Copy(BitConverter.GetBytes(this.contrast), 0, data, SMPos.contrast, 1);
+
+            Array.Copy(BitConverter.GetBytes(this.switch1), 0, data, SMPos.switch1, 1);
+            Array.Copy(BitConverter.GetBytes(this.switch2), 0, data, SMPos.switch2, 1);
+        }
+    } 
 
     static class USBSerial
     {

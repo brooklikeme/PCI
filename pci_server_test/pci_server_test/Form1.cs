@@ -13,10 +13,13 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 
-namespace pci_test
+namespace pci_server_test
 {
     public partial class MainForm : Form
     {
+
+        List<bool> detectList = new List<bool>();
+        List<double> diameterList = new List<double>();
 
         const int INVALID_HANDLE_VALUE = -1;
         const int PAGE_READWRITE = 0x04;
@@ -74,6 +77,17 @@ namespace pci_test
         private void MainForm_Load(object sender, EventArgs e)
         {
             initSharedMemory();
+            detectList.Add(false);
+            detectList.Add(false);
+            detectList.Add(false);
+
+            diameterList.Add(0.8F);
+            diameterList.Add(0.3F);
+            diameterList.Add(2.0F);
+
+            cbxForce1.SelectedIndex = 0;
+            cbxForce2.SelectedIndex = 0;
+            cbxForce3.SelectedIndex = 0;
         }
 
         private void initSharedMemory()
@@ -95,6 +109,8 @@ namespace pci_test
             }
             bool mutexCreated;
             smMutex = new Mutex(true, "PCI-SERVER-MUTEX", out mutexCreated);
+
+            timer1.Enabled = true;
         }
 
         private void freeSharedMemory()
@@ -107,13 +123,12 @@ namespace pci_test
         {
             try
             {
-                smData.setWritableData();
                 smMutex.WaitOne();
-                Marshal.Copy(smData.data, 0, smAddr, (int)SMPos.sm_length);
+                Marshal.Copy(smData.data, 0, smAddr, (int)SMPos.sm_set_length);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("更新共享内存出错：" + ex.Message);
+                // MessageBox.Show("更新共享内存出错：" + ex.Message);
             }
             finally
             {
@@ -127,11 +142,11 @@ namespace pci_test
             {
                 smMutex.WaitOne();
                 Marshal.Copy(smAddr, smData.data, 0, (int)SMPos.sm_length);
-                smData.getReadonlyData();
+                smData.getData();
             }
             catch (Exception ex)
             {
-                MessageBox.Show("获取共享内存出错：" + ex.Message);
+                // MessageBox.Show("获取共享内存出错：" + ex.Message);
             }
             finally
             {
@@ -147,7 +162,101 @@ namespace pci_test
         private void timer1_Tick(object sender, EventArgs e)
         {
             loadSharedMemory();
+            this.BeginInvoke(new MethodInvoker(delegate
+            {
+                pbrPressure.Value = smData.pressure;
+                lbPressureValue.Text = smData.pressure.ToString();
+                pbxSwitch1.BackColor = smData.switch1 ? Color.Green : Color.Gray;
+                pbxSwitch2.BackColor = smData.switch2 ? Color.Green : Color.Gray;
 
+                pbxContrast.BackColor = smData.contrast ? Color.Green : Color.Gray;
+
+                lbForceValue1.Text = smData.force1.ToString();
+                lbForceValue2.Text = smData.force2.ToString();
+                lbForceValue3.Text = smData.force3.ToString();
+
+                diameterList[0] = smData.diam1;
+                diameterList[1] = smData.diam2;
+                diameterList[2] = smData.diam3;
+
+                detectList[0] = diameterList[0] > 1.3;
+                detectList[1] = diameterList[1] > 0.2 && diameterList[1] < 0.6;
+                detectList[2] = diameterList[2] > 0.6;
+
+                if (detectList[0])
+                {
+                    pbxThickness1.BackColor = Color.Green;
+                }
+                else
+                {
+                    pbxThickness1.BackColor = Color.Gray;
+                    tbrTravel1.Value = 0;
+                    cpbRotation1.Value = 0;
+                }
+                if (detectList[1])
+                {
+                    pbxThickness2.BackColor = Color.Green;
+                }
+                else
+                {
+                    pbxThickness2.BackColor = Color.Gray;
+                    tbrTravel2.Value = 0;
+                    cpbRotation2.Value = 0;
+                }
+                if (detectList[2])
+                {
+                    pbxThickness3.BackColor = Color.Green;
+                }
+                else
+                {
+                    pbxThickness3.BackColor = Color.Gray;
+                    tbrTravel3.Value = 0;
+                    cpbRotation3.Value = 0;
+                }
+
+                lbThicknessValue1.Text = smData.diam1.ToString();
+                lbThicknessValue2.Text = smData.diam2.ToString();
+                lbThicknessValue3.Text = smData.diam3.ToString();
+
+                lbTravelValue1.Text = smData.travel1.ToString();
+                lbTravelValue2.Text = smData.travel2.ToString();
+                lbTravelValue3.Text = smData.travel3.ToString();
+
+                lbRotationValue1.Text = smData.angle1.ToString();
+                lbRotationValue2.Text = smData.angle2.ToString();
+                lbRotationValue3.Text = smData.angle3.ToString();
+
+                tbrTravel1.Value = smData.travel1 < 0 ? (int)smData.travel1 + 3000 : (int)smData.travel1 % 3000;
+                tbrTravel2.Value = smData.travel2 < 0 ? (int)smData.travel2 + 3000 : (int)smData.travel2 % 3000;
+                tbrTravel3.Value = smData.travel3 < 0 ? (int)smData.travel3 + 3000 : (int)smData.travel3 % 3000;
+
+                cpbRotation1.Value = (int)smData.angle1;
+                cpbRotation2.Value = (int)smData.angle2;
+                cpbRotation3.Value = (int)smData.angle3;
+            }));
+        }
+
+        private void btnSetForce3_Click(object sender, EventArgs e)
+        {
+            smData.setAimForce3(Int32.Parse(cbxForce3.GetItemText(cbxForce3.SelectedItem)));
+            updateSharedMemory();
+        }
+
+        private void btnSetForce2_Click(object sender, EventArgs e)
+        {
+            smData.setAimForce2(Int32.Parse(cbxForce2.GetItemText(cbxForce2.SelectedItem)));
+            updateSharedMemory();
+        }
+
+        private void btnSetForce1_Click(object sender, EventArgs e)
+        {
+            smData.setAimForce1(Int32.Parse(cbxForce1.GetItemText(cbxForce1.SelectedItem)));
+            updateSharedMemory();
+        }
+
+        private void btnClose_Click(object sender, EventArgs e)
+        {
+            this.Close();
         }
     }
 
@@ -176,16 +285,12 @@ namespace pci_test
         public static int switch1 = 65;     // boolean
         public static int switch2 = 66;     // boolean
 
-        public static int sm_length = 100;          // shared memory total size
+        public static int sm_length = 100;        // shared memory total size
+        public static int sm_set_length = 12;     // shared memory settnig size
     }
 
     public class SMData
     {
-        // writable
-        public int force1_set;          // Force Percentage
-        public int force2_set;          // Force Percentage
-        public int force3_set;          // Force Percentage
-        // readonly
         public float diam1;             // Unit: mm
         public float diam2;             // Unit: mm
         public float diam3;             // Unit: mm
@@ -206,22 +311,39 @@ namespace pci_test
 
         public byte[] data;             // shared memory data 
 
-        public SMData()
-        {
+        public SMData(){
             data = new byte[100];
         }
 
-        public void getWritableData()
+        public int getAimForce1()
         {
-            // writable
-            this.force1_set = BitConverter.ToInt32(data, SMPos.force1_set);
-            this.force2_set = BitConverter.ToInt32(data, SMPos.force2_set);
-            this.force3_set = BitConverter.ToInt32(data, SMPos.force3_set);
+            return BitConverter.ToInt32(data, SMPos.force1_set);
+        }
+        public int getAimForce2()
+        {
+            return BitConverter.ToInt32(data, SMPos.force2_set);
+        }
+        public int getAimForce3()
+        {
+            return BitConverter.ToInt32(data, SMPos.force3_set);
         }
 
-        public void getReadonlyData()
+        public void setAimForce1(int value)
         {
-            // readonly
+            Array.Copy(BitConverter.GetBytes(value), 0, data, SMPos.force1_set, 4);
+        }
+
+        public void setAimForce2(int value)
+        {
+            Array.Copy(BitConverter.GetBytes(value), 0, data, SMPos.force2_set, 4);
+        }
+        public void setAimForce3(int value)
+        {
+            Array.Copy(BitConverter.GetBytes(value), 0, data, SMPos.force3_set, 4);
+        }
+
+        public void getData()
+        {
             this.diam1 = BitConverter.ToSingle(data, SMPos.diam1);
             this.diam2 = BitConverter.ToSingle(data, SMPos.diam2);
             this.diam3 = BitConverter.ToSingle(data, SMPos.diam3);
@@ -246,16 +368,8 @@ namespace pci_test
             this.switch2 = BitConverter.ToBoolean(data, SMPos.switch2);
 
         }
-
-        public void setWritableData()
-        {
-            // writable
-            Array.Copy(BitConverter.GetBytes(this.force1_set), 0, data, SMPos.force1_set, 4);
-            Array.Copy(BitConverter.GetBytes(this.force2_set), 0, data, SMPos.force2_set, 4);
-            Array.Copy(BitConverter.GetBytes(this.force3_set), 0, data, SMPos.force3_set, 4);
-        }
-
-        public void setReadonlyData()
+        
+        public void setData()
         {
             // readonly
             Array.Copy(BitConverter.GetBytes(this.diam1), 0, data, SMPos.diam1, 4);

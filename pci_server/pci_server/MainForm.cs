@@ -32,9 +32,9 @@ namespace pci_server
         const int PAGE_READWRITE = 0x04;
         private IntPtr smHandle;     //文件句柄
         private IntPtr smAddr;       //共享内存地址
-        private byte[] smData = new byte[100];
+        private SMData smData;
         private int sharedMemoryInterval = 100;
-        private int sharedMemoryLastTime = DateTime.Now.Millisecond; 
+        private long sharedMemoryLastTime = DateTime.Now.Ticks / 10000; 
         private uint smLength = 100;
         private Mutex smMutex;
 
@@ -85,7 +85,7 @@ namespace pci_server
 
         private void m_MouseMoved(object sender, RawInput.MouseMoveEventArgs e)
         {
-            if (IsActive && e.Mouse.probeIndex > 0 && e.Mouse.probeIndex < 4 && detectList[e.Mouse.probeIndex - 1])
+            if (e.Mouse.probeIndex > 0 && e.Mouse.probeIndex < 4 && detectList[e.Mouse.probeIndex - 1])
             {
                 double yTravel = e.Mouse.cumulativeY * 1.0 / 24;
                 int yTravelInt = (int)(yTravel * 10) % 3000;
@@ -93,16 +93,34 @@ namespace pci_server
                 int xAngle = (int)((xTravel * 360) / (6.28 * diameterList[e.Mouse.probeIndex - 1])) % 360;
                 xAngle = xAngle < 0 ? xAngle + 360 : xAngle;
                 yTravelInt = yTravelInt < 0 ? yTravelInt + 3000 : yTravelInt;
-                travelLabelList[e.Mouse.probeIndex - 1].Text = Math.Round(yTravel, 1).ToString() + " / " + e.Mouse.cumulativeY.ToString();
-                rotationLabelList[e.Mouse.probeIndex - 1].Text = xAngle.ToString() + " / " + e.Mouse.cumulativeX.ToString();
-                travelBarList[e.Mouse.probeIndex - 1].Value = yTravelInt % 3000;
-                rotationBarList[e.Mouse.probeIndex - 1].Value = xAngle;
-
+                if (e.Mouse.probeIndex == 1)
+                {
+                    smData.angle1 = xAngle;
+                    smData.travel1 = Convert.ToSingle(Math.Round(yTravel * 10));
+                }
+                else if (e.Mouse.probeIndex == 2)
+                {
+                    smData.angle2 = xAngle;
+                    smData.travel2 = Convert.ToSingle(Math.Round(yTravel * 10));
+                }
+                else
+                {
+                    smData.angle3 = xAngle;
+                    smData.travel3 = Convert.ToSingle(Math.Round(yTravel * 10));
+                }
                 // update shared memory
-                if (DateTime.Now.Millisecond - sharedMemoryLastTime > sharedMemoryInterval)
+                if (DateTime.Now.Ticks / 10000 - sharedMemoryLastTime > sharedMemoryInterval)
                 {
                     // update information
                     updateSharedMemory();
+                }
+                if (IsActive)
+                {
+
+                    travelLabelList[e.Mouse.probeIndex - 1].Text = Math.Round(yTravel, 1).ToString() + " / " + e.Mouse.cumulativeY.ToString();
+                    rotationLabelList[e.Mouse.probeIndex - 1].Text = xAngle.ToString() + " / " + e.Mouse.cumulativeX.ToString();
+                    travelBarList[e.Mouse.probeIndex - 1].Value = yTravelInt % 3000;
+                    rotationBarList[e.Mouse.probeIndex - 1].Value = xAngle;
                 }
             }
         }
@@ -184,8 +202,9 @@ namespace pci_server
 
         private void initSharedMemory()
         {
+            smData = new SMData();
             IntPtr hFile = new IntPtr(INVALID_HANDLE_VALUE);
-            smHandle = CreateFileMapping(hFile, 0, PAGE_READWRITE, 0, smLength, "PCI-SERVER-SM");
+            smHandle = CreateFileMapping(hFile, 0, PAGE_READWRITE, 0, (uint)SMPos.sm_length, "PCI-SERVER-SM");
             if (smHandle == IntPtr.Zero)
             {
                 MessageBox.Show("创建共享内存对象失败!");
@@ -210,13 +229,24 @@ namespace pci_server
 
         private void updateSharedMemory()
         {
+            int force1 = -1;
+            int force2 = -1;
+            int force3 = -1;
             try
             {
-                Array.Copy(BitConverter.GetBytes(1.1F), 0, smData, SMPos.angle1, 4);
-                Array.Copy(BitConverter.GetBytes(2.2F), 0, smData, SMPos.angle2, 4);
-                Array.Copy(BitConverter.GetBytes(3.3F), 0, smData, SMPos.angle3, 4);
                 smMutex.WaitOne();
-                Marshal.Copy(smData, 0, smAddr, (int)smLength);
+                // read force set data
+                Marshal.Copy(smAddr, smData.data, 0, (int)SMPos.sm_set_length);
+                force1 = smData.getAimForce1();
+                force2 = smData.getAimForce2();
+                force3 = smData.getAimForce3();
+                // clear setting flag
+                smData.setAimForce1(-1);
+                smData.setAimForce2(-1);
+                smData.setAimForce3(-1);
+                smData.setData();
+                Marshal.Copy(smData.data, 0, smAddr, (int)SMPos.sm_length);
+                sharedMemoryLastTime = DateTime.Now.Ticks / 10000;
             }
             catch (Exception ex)
             {
@@ -226,6 +256,23 @@ namespace pci_server
             {
                 smMutex.ReleaseMutex();
             }
+
+            // check if aim forces are set
+            if (force1 >= 0)
+            {
+                USBSerial.SetServoAngle(0, (int)USBSerial.map(force1, 0, 100, USBSerial.advConfig.min_servo_angle1, USBSerial.advConfig.max_servo_angle1));
+            }
+
+            if (force2 >= 0)
+            {
+                USBSerial.SetServoAngle(1, (int)USBSerial.map(force2, 0, 100, USBSerial.advConfig.min_servo_angle2, USBSerial.advConfig.max_servo_angle2));
+            }
+
+            if (force3 >= 0)
+            {
+                USBSerial.SetServoAngle(2, (int)USBSerial.map(force3, 0, 100, USBSerial.advConfig.min_servo_angle3, USBSerial.advConfig.max_servo_angle3));
+            }
+
         }
 
         private void sendDataError(string errMessage)
@@ -235,39 +282,50 @@ namespace pci_server
 
         private void deviceDataReceived(DeviceData deviceData)
         {
-            this.BeginInvoke(new MethodInvoker(delegate
+            // update sm data received from serial device
+            smData.pressure = deviceData.pressure;
+            smData.switch1 = deviceData.switch1 == 1;
+            smData.switch2 = deviceData.switch2 == 1;
+
+            // check if device adv config is available
+            if (USBSerial.advConfig.max_hall_value1 > 100)
             {
-                if (DateTime.Now.Millisecond - sharedMemoryLastTime > sharedMemoryInterval)
+                smData.contrast = deviceData.contrast > USBSerial.advConfig.contrast_threshold;
+
+                smData.force1 = Convert.ToInt32(USBSerial.map(deviceData.servo_angle1, USBSerial.advConfig.min_servo_angle1, USBSerial.advConfig.max_servo_angle1, 0, 100));
+                smData.force2 = Convert.ToInt32(USBSerial.map(deviceData.servo_angle2, USBSerial.advConfig.min_servo_angle2, USBSerial.advConfig.max_servo_angle2, 0, 100));
+                smData.force3 = Convert.ToInt32(USBSerial.map(deviceData.servo_angle3, USBSerial.advConfig.min_servo_angle3, USBSerial.advConfig.max_servo_angle3, 0, 100));
+
+                smData.diam1 = Convert.ToSingle(Math.Round(USBSerial.map(deviceData.hall_value1, USBSerial.advConfig.min_hall_value1, USBSerial.advConfig.max_hall_value1, USBSerial.advConfig.min_hall_diam1, USBSerial.advConfig.max_hall_diam1) / 10.0, 1));
+                smData.diam2 = Convert.ToSingle(Math.Round(USBSerial.map(deviceData.hall_value2, USBSerial.advConfig.min_hall_value2, USBSerial.advConfig.max_hall_value2, USBSerial.advConfig.min_hall_diam2, USBSerial.advConfig.max_hall_diam2) / 10.0, 1));
+                smData.diam3 = Convert.ToSingle(Math.Round(USBSerial.map(deviceData.hall_value3, USBSerial.advConfig.min_hall_value3, USBSerial.advConfig.max_hall_value3, USBSerial.advConfig.min_hall_diam3, USBSerial.advConfig.max_hall_diam3) / 10.0, 1));
+
+                if (DateTime.Now.Ticks / 10000 - sharedMemoryLastTime > sharedMemoryInterval)
                 {
                     // update information
                     updateSharedMemory();
                 }
 
-                pbrPressure.Value = deviceData.pressure;
-                lbPressureValue.Text = deviceData.pressure.ToString();
-                pbxSwitch1.BackColor = deviceData.switch1 == 1 ? Color.Green : Color.Gray;
-                pbxSwitch2.BackColor = deviceData.switch2 == 1 ? Color.Green : Color.Gray;
-
-                // check if device adv config is available
-                if (USBSerial.advConfig.max_hall_value1 > 100)
+                this.BeginInvoke(new MethodInvoker(delegate
                 {
-                    pbxContrast.BackColor = deviceData.contrast > USBSerial.advConfig.contrast_threshold ? Color.Green : Color.Gray;
+                    pbrPressure.Value = smData.pressure;
+                    lbPressureValue.Text = smData.pressure.ToString();
+                    pbxSwitch1.BackColor = smData.switch1 ? Color.Green : Color.Gray;
+                    pbxSwitch2.BackColor = smData.switch2 ? Color.Green : Color.Gray;
 
-                    lbForceValue1.Text = Convert.ToInt32(USBSerial.map(deviceData.servo_angle1, USBSerial.advConfig.min_servo_angle1, USBSerial.advConfig.max_servo_angle1, 0, 100)).ToString();
-                    lbForceValue2.Text = Convert.ToInt32(USBSerial.map(deviceData.servo_angle2, USBSerial.advConfig.min_servo_angle2, USBSerial.advConfig.max_servo_angle2, 0, 100)).ToString();
-                    lbForceValue3.Text = Convert.ToInt32(USBSerial.map(deviceData.servo_angle3, USBSerial.advConfig.min_servo_angle3, USBSerial.advConfig.max_servo_angle3, 0, 100)).ToString();
+                    pbxContrast.BackColor = smData.contrast ? Color.Green : Color.Gray;
 
-                    diameterList[0] = USBSerial.map(deviceData.hall_value1, USBSerial.advConfig.min_hall_value1, USBSerial.advConfig.max_hall_value1, USBSerial.advConfig.min_hall_diam1, USBSerial.advConfig.max_hall_diam1) / 10.0;
-                    diameterList[1] = USBSerial.map(deviceData.hall_value2, USBSerial.advConfig.min_hall_value2, USBSerial.advConfig.max_hall_value2, USBSerial.advConfig.min_hall_diam2, USBSerial.advConfig.max_hall_diam2) / 10.0;
-                    diameterList[2] = USBSerial.map(deviceData.hall_value3, USBSerial.advConfig.min_hall_value3, USBSerial.advConfig.max_hall_value3, USBSerial.advConfig.min_hall_diam3, USBSerial.advConfig.max_hall_diam3) / 10.0;
+                    lbForceValue1.Text = smData.force1.ToString();
+                    lbForceValue2.Text = smData.force2.ToString();
+                    lbForceValue3.Text = smData.force3.ToString();
+
+                    diameterList[0] = smData.diam1;
+                    diameterList[1] = smData.diam2;
+                    diameterList[2] = smData.diam3;
 
                     detectList[0] = diameterList[0] > 1.3;
                     detectList[1] = diameterList[1] > 0.2 && diameterList[1] < 0.6;
                     detectList[2] = diameterList[2] > 0.6;
-
-                    // pbxThickness1.BackColor = detectList[0] ? Color.Green : Color.Gray;
-                    // pbxThickness2.BackColor = detectList[1] ? Color.Green : Color.Gray;
-                    // pbxThickness3.BackColor = detectList[2] ? Color.Green : Color.Gray;
 
                     if (detectList[0])
                     {
@@ -303,9 +361,8 @@ namespace pci_server
                     lbThicknessValue1.Text = Math.Round(diameterList[0], 1).ToString();
                     lbThicknessValue2.Text = Math.Round(diameterList[1], 1).ToString();
                     lbThicknessValue3.Text = Math.Round(diameterList[2], 1).ToString();
-                }
-
-            }));
+                }));
+            }
         }
 
         private void advConfigDataReceived(AdvConfig advConfig)
@@ -399,7 +456,6 @@ namespace pci_server
         private void tmrCheckSerial_Tick(object sender, EventArgs e)
         {
             updateSharedMemory();
-
             // task
             if (!PCIConfig.NewBaseConfig.ContainsKey("SerialPort") || PCIConfig.NewBaseConfig["SerialPort"] == "") {
                 if (USBSerial.ComDevice.IsOpen) {

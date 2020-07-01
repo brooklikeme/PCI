@@ -58,6 +58,9 @@
             this.txtTravelSignal5 = new System.Windows.Forms.TextBox();
             this.txtDeviceIdentity5 = new System.Windows.Forms.TextBox();
             this.cbxSetProbe5 = new System.Windows.Forms.ComboBox();
+            this.txtInterval = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -104,7 +107,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(46, 52);
+            this.label1.Location = new System.Drawing.Point(46, 48);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(122, 26);
             this.label1.TabIndex = 6;
@@ -116,7 +119,7 @@
             this.cbxSerialPorts.FormattingEnabled = true;
             this.cbxSerialPorts.Items.AddRange(new object[] {
             "<未设置>"});
-            this.cbxSerialPorts.Location = new System.Drawing.Point(174, 49);
+            this.cbxSerialPorts.Location = new System.Drawing.Point(174, 45);
             this.cbxSerialPorts.Name = "cbxSerialPorts";
             this.cbxSerialPorts.Size = new System.Drawing.Size(200, 33);
             this.cbxSerialPorts.TabIndex = 7;
@@ -353,12 +356,42 @@
             this.cbxSetProbe5.TabIndex = 29;
             this.cbxSetProbe5.SelectionChangeCommitted += new System.EventHandler(this.cbxSetProbe5_SelectionChangeCommitted);
             // 
+            // txtInterval
+            // 
+            this.txtInterval.Location = new System.Drawing.Point(685, 46);
+            this.txtInterval.Name = "txtInterval";
+            this.txtInterval.Size = new System.Drawing.Size(100, 31);
+            this.txtInterval.TabIndex = 34;
+            this.txtInterval.Text = "100";
+            this.txtInterval.TextChanged += new System.EventHandler(this.txtInterval_TextChanged);
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(470, 48);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(210, 26);
+            this.label2.TabIndex = 33;
+            this.label2.Text = "共享内存更新间隔：";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(807, 49);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(56, 26);
+            this.label3.TabIndex = 35;
+            this.label3.Text = "毫秒";
+            // 
             // ConfigForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.ClientSize = new System.Drawing.Size(1309, 759);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.txtInterval);
+            this.Controls.Add(this.label2);
             this.Controls.Add(this.txtRotationSignal5);
             this.Controls.Add(this.txtTravelSignal5);
             this.Controls.Add(this.txtDeviceIdentity5);
@@ -430,5 +463,8 @@
         private System.Windows.Forms.TextBox txtTravelSignal5;
         private System.Windows.Forms.TextBox txtDeviceIdentity5;
         private System.Windows.Forms.ComboBox cbxSetProbe5;
+        private System.Windows.Forms.TextBox txtInterval;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label3;
     }
 }

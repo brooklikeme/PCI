@@ -152,6 +152,8 @@ namespace pci_server
         {
             // load config
             PCIConfig.LoadBaseConfig();
+            int value = 0;
+            this.sharedMemoryInterval = Int32.TryParse(PCIConfig.NewBaseConfig["Interval"], out value) ? value : 100;
 
             detectList.Add(false);
             detectList.Add(false);
@@ -455,7 +457,10 @@ namespace pci_server
 
         private void tmrCheckSerial_Tick(object sender, EventArgs e)
         {
-            updateSharedMemory();
+            // also check share memory update interval
+            int value = 0;
+            this.sharedMemoryInterval = Int32.TryParse(PCIConfig.NewBaseConfig["Interval"], out value) ? value : 100;
+
             // task
             if (!PCIConfig.NewBaseConfig.ContainsKey("SerialPort") || PCIConfig.NewBaseConfig["SerialPort"] == "") {
                 if (USBSerial.ComDevice.IsOpen) {
@@ -541,6 +546,58 @@ namespace pci_server
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
 
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+              // 注意判断关闭事件reason来源于窗体按钮，否则用菜单退出时无法退出!
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                //取消"关闭窗口"事件
+                e.Cancel = true; // 取消关闭窗体 
+
+                //使关闭时窗口向右下角缩小的效果
+                this.WindowState = FormWindowState.Minimized;
+                this.mainNotifyIcon.Visible = true;
+                this.Hide();
+                return;
+            }
+        }
+
+        private void mainNotifyIcon_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            if (this.Visible)
+            {
+                this.WindowState = FormWindowState.Minimized;
+                this.mainNotifyIcon.Visible = true;
+                this.Hide();
+            }
+            else
+            {
+                this.Visible = true;
+                this.WindowState = FormWindowState.Normal;
+                this.Activate();
+            }
+        }
+
+        private void toolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            this.WindowState = FormWindowState.Normal;
+            this.mainNotifyIcon.Visible = true;
+            this.Show();
+        }
+
+        private void toolStripMenuItem2_Click(object sender, EventArgs e)
+        {
+            if (MessageBox.Show("退出后PCI设备将无法正常运行，确定要退出？", "系统提示", MessageBoxButtons.YesNo, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1) == DialogResult.Yes)
+            {
+
+                this.mainNotifyIcon.Visible = false;
+                this.Close();
+                this.Dispose();
+                System.Environment.Exit(System.Environment.ExitCode);   
+
+            }
         }
     }
 }

@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.btnClose = new System.Windows.Forms.Button();
             this.pbrPressure = new System.Windows.Forms.ProgressBar();
             this.tbrTravel1 = new System.Windows.Forms.TrackBar();
@@ -94,6 +95,10 @@
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.cpbRotation2 = new CircularProgressBar.CircularProgressBar();
             this.cpbRotation3 = new CircularProgressBar.CircularProgressBar();
+            this.mainNotifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
+            this.mainContextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.tbrTravel1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbxSerialStatus)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbxThickness1)).BeginInit();
@@ -104,6 +109,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.pbxContrast)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbxSwitch1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbxSwitch2)).BeginInit();
+            this.mainContextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnClose
@@ -801,6 +807,37 @@
             this.cpbRotation3.TextMargin = new System.Windows.Forms.Padding(8, 8, 0, 0);
             this.cpbRotation3.Value = 68;
             // 
+            // mainNotifyIcon
+            // 
+            this.mainNotifyIcon.ContextMenuStrip = this.mainContextMenuStrip;
+            this.mainNotifyIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("mainNotifyIcon.Icon")));
+            this.mainNotifyIcon.Text = "PCI服务程序";
+            this.mainNotifyIcon.Visible = true;
+            this.mainNotifyIcon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.mainNotifyIcon_MouseDoubleClick);
+            // 
+            // mainContextMenuStrip
+            // 
+            this.mainContextMenuStrip.ImageScalingSize = new System.Drawing.Size(32, 32);
+            this.mainContextMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItem1,
+            this.toolStripMenuItem2});
+            this.mainContextMenuStrip.Name = "mainContextMenuStrip";
+            this.mainContextMenuStrip.Size = new System.Drawing.Size(166, 84);
+            // 
+            // toolStripMenuItem1
+            // 
+            this.toolStripMenuItem1.Name = "toolStripMenuItem1";
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(268, 40);
+            this.toolStripMenuItem1.Text = "还原";
+            this.toolStripMenuItem1.Click += new System.EventHandler(this.toolStripMenuItem1_Click);
+            // 
+            // toolStripMenuItem2
+            // 
+            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(268, 40);
+            this.toolStripMenuItem2.Text = "退出";
+            this.toolStripMenuItem2.Click += new System.EventHandler(this.toolStripMenuItem2_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(12F, 25F);
@@ -870,10 +907,12 @@
             this.Controls.Add(this.pbrPressure);
             this.Controls.Add(this.tbrTravel1);
             this.Controls.Add(this.btnClose);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "MainForm";
             this.Text = "PCI服务端";
             this.Activated += new System.EventHandler(this.MainForm_Activated);
             this.Deactivate += new System.EventHandler(this.MainForm_Deactivate);
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.MainForm_FormClosed);
             this.Load += new System.EventHandler(this.MainForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.tbrTravel1)).EndInit();
@@ -886,6 +925,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.pbxContrast)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbxSwitch1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pbxSwitch2)).EndInit();
+            this.mainContextMenuStrip.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -958,6 +998,10 @@
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
         private CircularProgressBar.CircularProgressBar cpbRotation2;
         private CircularProgressBar.CircularProgressBar cpbRotation3;
+        private System.Windows.Forms.NotifyIcon mainNotifyIcon;
+        private System.Windows.Forms.ContextMenuStrip mainContextMenuStrip;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem2;
     }
 }
 

@@ -160,6 +160,16 @@ namespace pci_server
                     PCIConfig.NewBaseConfig["Probe" + setProbeComboBoxList[i].SelectedIndex] = deviceIdentityTextList[i].Text;
                 }
             }
+
+            if (PCIConfig.NewBaseConfig.ContainsKey("Interval"))
+            {
+                PCIConfig.NewBaseConfig["Interval"] = txtInterval.Text;
+            }
+            else
+            {
+                PCIConfig.NewBaseConfig.Add("Interval", txtInterval.Text);
+            }
+
             // compare new config to old
             btnApply.Enabled = !PCIConfig.CompareBaseConfig();
         }
@@ -234,6 +244,11 @@ namespace pci_server
             AdvConfgForm frmAdvConfig = new AdvConfgForm();
             frmAdvConfig.ShowDialog(this);
             frmAdvConfig.Dispose();
+        }
+
+        private void txtInterval_TextChanged(object sender, EventArgs e)
+        {
+            CheckBaseConfigChanged();
         }
 
     }

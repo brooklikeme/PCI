@@ -18,6 +18,8 @@
 #define HALL_PIN2 A1
 #define HALL_PIN3 A2
 
+#define DEBUG
+
 Servo servo1; 
 Servo servo2; 
 Servo servo3; 
@@ -189,17 +191,29 @@ byte readSwitchStatus2(){
 
 // -----------------------------------------------------------
 int readHall1() {
+#ifdef DEBUG
+  return 500;
+#else
   return analogRead(HALL_PIN1);
+#endif
 }
 
 // -----------------------------------------------------------
 int readHall2() {
+#ifdef DEBUG
+  return 500;
+#else  
   return analogRead(HALL_PIN2);
+#endif
 }
 
 // -----------------------------------------------------------
 int readHall3() {
+#ifdef DEBUG
+  return 500;
+#else  
   return analogRead(HALL_PIN3);
+#endif
 }
 
 // -----------------------------------------------------------

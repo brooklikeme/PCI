@@ -18,7 +18,7 @@
 #define HALL_PIN2 A1
 #define HALL_PIN3 A2
 
-#define DEBUG
+//#define DEBUG
 
 Servo servo1; 
 Servo servo2; 
@@ -31,12 +31,13 @@ enum SERIAL_TYPE {
   DEVICE_DATA       = 0,
   ADV_CONFIG_DATA   = 1,
   SERVO_SET_DATA    = 2,
+  HEARTBEAT_DATA    = 3,
   SERIAL_NONE       = 100
 };
 
 // eep rom structs total Bytes: 26
 struct AdvConfig {
-  byte min_hall_diam1;    //1
+  byte min_hall_diam1;     //1
   int min_hall_value1;    //2
   byte max_hall_diam1;    //1
   int max_hall_value1;    //2
@@ -108,6 +109,9 @@ DeviceDataUnion device_data_union_prev;
 byte recvBuffer[30];
 int recvBufferIndex = 0;
 SERIAL_TYPE serialType;
+
+unsigned long last_heartbeat_time = 0;
+unsigned long heartbeat_interval = 10000;
 
 // servo operation
 // -----------------------------------------------------------
@@ -214,6 +218,16 @@ int readHall3() {
 #else  
   return analogRead(HALL_PIN3);
 #endif
+}
+
+void check_heartbeat()
+{
+  if (last_heartbeat_time == 0 || (millis() - last_heartbeat_time > heartbeat_interval)) {
+    looseAllServos();
+    digitalWrite(HEARTBEAT_PIN, LOW);
+  } else {
+    digitalWrite(HEARTBEAT_PIN, HIGH);
+  }
 }
 
 // -----------------------------------------------------------
@@ -348,6 +362,9 @@ void loop(){
             Serial.write('+');  // end sysbol
             Serial.write('+');  // end sysbol  
           }          
+        } else 
+        if (serialType == HEARTBEAT_DATA) {
+          last_heartbeat_time = millis();
         }
         serialType = SERIAL_NONE;
         recvBufferIndex = 0;
@@ -358,6 +375,8 @@ void loop(){
         recvBufferIndex = 0;
       }
     }
+
+    check_heartbeat();
     // update prev read time
     sendTime = currTime;    
   }

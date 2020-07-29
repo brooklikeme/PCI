@@ -21,6 +21,7 @@ namespace pci_server
         DEVICE_DATA = 0,
         ADV_CONFIG_DATA = 1,
         SERVO_SET_DATA = 2,
+        HEARTBEAT_DATA = 3,
         SERIAL_NONE = 100
     }
 
@@ -271,6 +272,15 @@ namespace pci_server
         public static void RequestAdvConfig()
         {
             SendBuffer[0] = (byte)SERIAL_TYPE.ADV_CONFIG_DATA;
+            SendBuffer[1] = (byte)'+';
+            SendBuffer[2] = (byte)'+';
+            SendBuffer[3] = (byte)'+';
+            SendData(SendBuffer, 4);
+        }
+
+        public static void SendHeartbeat()
+        {
+            SendBuffer[0] = (byte)SERIAL_TYPE.HEARTBEAT_DATA;
             SendBuffer[1] = (byte)'+';
             SendBuffer[2] = (byte)'+';
             SendBuffer[3] = (byte)'+';

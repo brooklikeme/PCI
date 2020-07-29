@@ -493,6 +493,11 @@ namespace pci_server
                     }
                     portCountDown--;
                 }
+                else
+                {
+                    // send heartbeat data
+                    USBSerial.SendHeartbeat();
+                }
             }
         }
 

@@ -318,8 +318,8 @@ void loop(){
 
     Serial.print(", contrast_threshold: ");
     Serial.println(adv_config_union.adv_config.contrast_threshold);   
-
     */
+
 
     if (memcmp(device_data_union.device_data_bytes, device_data_union_prev.device_data_bytes, sizeof(device_data_union.device_data_bytes)) != 0) {
       Serial.write(DEVICE_DATA);

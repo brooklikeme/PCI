@@ -137,9 +137,9 @@
             this.label24.AutoSize = true;
             this.label24.Location = new System.Drawing.Point(24, 100);
             this.label24.Name = "label24";
-            this.label24.Size = new System.Drawing.Size(122, 26);
+            this.label24.Size = new System.Drawing.Size(100, 26);
             this.label24.TabIndex = 18;
-            this.label24.Text = "舵机角度：";
+            this.label24.Text = "舵机角：";
             // 
             // txtServoAngle1
             // 
@@ -369,9 +369,9 @@
             this.label25.AutoSize = true;
             this.label25.Location = new System.Drawing.Point(24, 100);
             this.label25.Name = "label25";
-            this.label25.Size = new System.Drawing.Size(122, 26);
+            this.label25.Size = new System.Drawing.Size(100, 26);
             this.label25.TabIndex = 20;
-            this.label25.Text = "舵机角度：";
+            this.label25.Text = "舵机角：";
             // 
             // btnSetMaxAngle2
             // 
@@ -546,9 +546,9 @@
             this.label26.AutoSize = true;
             this.label26.Location = new System.Drawing.Point(24, 100);
             this.label26.Name = "label26";
-            this.label26.Size = new System.Drawing.Size(122, 26);
+            this.label26.Size = new System.Drawing.Size(100, 26);
             this.label26.TabIndex = 20;
-            this.label26.Text = "舵机角度：";
+            this.label26.Text = "舵机角：";
             // 
             // txtServoAngle3
             // 

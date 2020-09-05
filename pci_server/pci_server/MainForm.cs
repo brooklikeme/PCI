@@ -325,9 +325,9 @@ namespace pci_server
                     diameterList[1] = smData.diam2;
                     diameterList[2] = smData.diam3;
 
-                    detectList[0] = diameterList[0] > 1.3;
-                    detectList[1] = diameterList[1] > 0.2 && diameterList[1] < 0.6;
-                    detectList[2] = diameterList[2] > 0.6;
+                    detectList[0] = true; // diameterList[0] > 1.3;
+                    detectList[1] = true; // diameterList[1] > 0.2 && diameterList[1] < 0.6;
+                    detectList[2] = true; // diameterList[2] > 0.6;
 
                     if (detectList[0])
                     {
